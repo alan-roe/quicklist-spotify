@@ -1,0 +1,10 @@
+[package]
+name = "frontend"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+zoon.workspace = true
+shared = { path = "../shared", features = ["frontend"] }
+serde = { version = "1.0.152", features = ["derive"] }
