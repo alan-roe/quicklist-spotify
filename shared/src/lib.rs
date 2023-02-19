@@ -1,4 +1,5 @@
 use moonlight::*;
+pub use rspotify;
 
 // ------ UpMsg ------
 
