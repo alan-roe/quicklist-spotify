@@ -6,7 +6,6 @@ publish.workspace = true
 
 [dependencies]
 moonlight.workspace = true
-serde = { version = "1.0.152", features = ["derive"] }
 rspotify = {git = "https://github.com/ramsayleung/rspotify" }
 
 [features]

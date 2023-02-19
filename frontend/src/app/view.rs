@@ -15,14 +15,14 @@ pub fn root() -> impl Element {
 
 fn content() -> impl Element {
     Column::new()
-        .s(Width::fill().min(230).max(550))
+        .s(Width::fill().min(230).max(1024))
         .s(Align::new().center_x())
         .item(header())
         .item(
             Column::new()
                 .s(Width::fill())
                 .s(Gap::both(65))
-                .item(panel())
+                .item(panels())
                 .item(footer()),
         )
 }
@@ -39,17 +39,41 @@ fn header() -> impl Element {
         .child(El::with_tag(Tag::H1).child("QuickList for Spotify"))
 }
 
-fn panel() -> impl Element {
+fn panels() -> impl Element {
+    Row::new()
+        .item(search_results_panel())
+        .item(playlist_panel())
+}
+
+// ------ Search ------
+
+fn search_results_panel() -> impl Element {
     Column::with_tag(Tag::Section)
-        .s(Shadows::new([
-            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
-        ]))
+    .s(Shadows::new([
+        Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+        Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+    ]))
+    .s(Width::fill())
+    .s(Background::new().color(hsluv!(0, 0, 100)))
+    .item(search_track())
+    .item_signal(super::results_exist().map_true(search_results))
+}
+
+fn search_result(track: Arc<Track>) -> impl Element {
+    Row::new()
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
-        .item(search_track())
-        .item_signal(super::tracks_exist().map_true(tracks))
-        .item_signal(super::tracks_exist().map_true(panel_footer))
+        .s(Gap::both(5))
+        .s(Font::new().size(24))
+        .item(search_info(track))
+}
+
+fn search_results() -> impl Element {
+    Column::new()
+        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
+        .s(Background::new().color(hsluv!(0, 0, 93.7)))
+        .s(Gap::both(1))
+        .items_signal_vec(super::search_results().signal_vec_cloned().map(search_result))
 }
 
 fn search_track() -> impl Element {
@@ -75,6 +99,32 @@ fn search_track() -> impl Element {
         })
         .text_signal(super::new_query().signal_cloned())
 }
+
+fn search_info(track: Arc<Track>) -> impl Element {
+    Label::new()
+        .s(Width::fill())
+        .s(Font::new().color(hsluv!(0, 0, 32.7)).size(24))
+        .s(Padding::all(15).right(60))
+        .s(Clip::x())
+        .for_input(track.track_id.clone())
+        .label(track.format.clone())
+}
+
+// ------ Playlist ------
+
+fn playlist_panel() -> impl Element {
+    Column::with_tag(Tag::Section)
+        .s(Shadows::new([
+            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+        ]))
+        .s(Width::fill())
+        .s(Background::new().color(hsluv!(0, 0, 100)))
+       // .item(search_track())
+        .item_signal(super::tracks_exist().map_true(tracks))
+        .item_signal(super::tracks_exist().map_true(panel_footer))
+}
+
 
 fn track(track: Arc<Track>) -> impl Element {
     Row::new()

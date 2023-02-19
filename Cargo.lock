@@ -290,6 +290,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "390a110411bbc7c93b77a736cbd694f64cb06dfa2702173f63169d7a1e1b5298"
 
 [[package]]
+name = "async-recursion"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3b015a331cc64ebd1774ba119538573603427eaace0a1950c423ab971f903796"
+dependencies = [
+ "proc-macro2 1.0.51",
+ "quote 1.0.23",
+ "syn 1.0.107",
+]
+
+[[package]]
 name = "async-stream"
 version = "0.3.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -354,6 +365,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "async-once-cell",
+ "async-recursion",
  "moon",
  "rspotify",
  "serde",
@@ -2130,7 +2142,6 @@ version = "0.1.0"
 dependencies = [
  "moonlight",
  "rspotify",
- "serde",
 ]
 
 [[package]]
