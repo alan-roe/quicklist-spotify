@@ -1,3 +1,4 @@
+use rspotify::{ClientCredsSpotify, model::{SearchResult, SearchType}, prelude::BaseClient};
 use shared::*;
 use std::sync::Arc;
 use zoon::{eprintln, println, *};
@@ -35,9 +36,36 @@ fn new_query() -> &'static Mutable<String> {
 }
 
 #[static_ref]
-pub fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new(|DownMsg::SearchResult(track), _| {
-        current_track().set(track);
+fn token() -> &'static Mutable<rspotify::Token> {
+    Mutable::new(rspotify::Token::default())
+}
+
+#[static_ref]
+fn client() -> &'static Mutable<ClientCredsSpotify> {
+    Mutable::new(ClientCredsSpotify::from_token(token().get_cloned()))
+}
+
+fn request_token() {
+    Task::start(async {
+        let result = connection()
+            .send_up_msg(UpMsg::RequestToken)
+            .await;
+        if let Err(error) = result {
+            eprintln!("Failed to send message: {:?}", error);
+        }
+    });
+}
+
+pub fn init_client() {
+    request_token();
+    connection();
+}
+
+#[static_ref]
+fn connection() -> &'static Connection<UpMsg, DownMsg> {
+    Connection::new(|DownMsg::Token(toke), _| {
+        println!("DownMsg: {:?}", toke);
+        token().set(toke);
     })
 }
 
@@ -74,15 +102,41 @@ pub fn load_tracks() {
     }
 }
 
+
 fn search() {
+
+    //if query.is_empty() {
+    //
+    //}
     Task::start(async {
-        let result = connection()
-            .send_up_msg(UpMsg::SendQuery(new_query().lock_mut().clone()))
-            .await;
-        if let Err(error) = result {
-            eprintln!("Failed to send message: {:?}", error);
+    
+    let query = new_query().get_cloned();
+    let query = query.trim();
+        if let Ok(search_result) = client().lock_ref()
+        .search(query, SearchType::Track, None, None, Some(1), None)
+        .await
+    {
+        use SearchResult::*;
+
+        if let Tracks(track) = search_result {
+            if let Some(track) = track.items.first() {
+                //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
+
+                let track = track.clone();
+                println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
+                current_track().set( Track {
+                    format: format!("{} - {}", &track.name, &track.artists[0].name),
+                    track_id: track.id.unwrap().to_string(),
+                    title: track.name.clone(),
+                    artist: track.artists[0].name.clone(),
+                });
+            }
         }
-    });
+    }
+    println!("lol");
+    })
+    
+    
 }
 
 fn save_tracks() {

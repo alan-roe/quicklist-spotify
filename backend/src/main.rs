@@ -4,7 +4,7 @@ use rspotify::{
     self,
     model::{SearchResult, SearchType},
     prelude::BaseClient,
-    ClientCredsSpotify, Credentials,
+    ClientCredsSpotify, Credentials, Token,
 };
 use shared::*;
 
@@ -27,9 +27,7 @@ async fn frontend() -> Frontend {
 
 static CLIENT: OnceCell<ClientCredsSpotify> = OnceCell::new();
 
-async fn search(query: &str) -> Track {
-    let query = query.trim();
-
+async fn request_token() -> anyhow::Result<Token> {
     let client = CLIENT
         .get_or_init(async {
             let creds = Credentials {
@@ -43,37 +41,17 @@ async fn search(query: &str) -> Track {
             client
         })
         .await;
+    let token = client.get_token().clone();
+    let token = token.lock().await.unwrap().clone();
 
-    //if query.is_empty() {
-    //
-    //}
-    if let Ok(search_result) = client
-        .search(query, SearchType::Track, None, None, Some(1), None)
-        .await
-    {
-        use SearchResult::*;
+    if let Some(token) = token {
+        Ok(token)
+    } else {
+        client.refresh_token().await?;
+        let token = client.get_token().clone();
+        let token = token.lock().await.unwrap().clone();
 
-        if let Tracks(track) = search_result {
-            if let Some(track) = track.items.first() {
-                //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
-
-                let track = track.clone();
-                println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
-                return Track {
-                    format: format!("{} - {}", &track.name, &track.artists[0].name),
-                    track_id: track.id.unwrap().to_string(),
-                    title: track.name.clone(),
-                    artist: track.artists[0].name.clone(),
-                };
-            }
-        }
-    }
-    println!("lol");
-    Track {
-        format: format!("{} - {}", &query, &query),
-        track_id: query.to_string(),
-        title: query.to_string(),
-        artist: Default::default(),
+        Ok(token.unwrap())
     }
 }
 
@@ -86,13 +64,16 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
         session_id,
         ..
     } = req;
-    let UpMsg::SendQuery(query) = up_msg;
 
-    sessions::by_session_id()
-        .get(session_id)
-        .unwrap()
-        .send_down_msg(&DownMsg::SearchResult(search(&query).await), cor_id)
-        .await;
+    let down_msg = match up_msg {
+        UpMsg::RequestToken => DownMsg::Token(request_token().await.unwrap()),
+    };
+
+    if let Some(session) = sessions::by_session_id().get(session_id) {
+        session.send_down_msg(&down_msg, cor_id).await;
+    } else {
+        println!("Failed to get session {session_id}");
+    }
 }
 
 #[moon::main]
