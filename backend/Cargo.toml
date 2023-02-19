@@ -1,0 +1,12 @@
+[package]
+name = "backend"
+version.workspace = true
+edition.workspace = true
+publish.workspace = true
+
+[dependencies]
+moon.workspace = true
+shared = { path = "../shared", features = ["backend"] }
+rspotify = {git = "https://github.com/ramsayleung/rspotify" }
+serde = { version = "1.0.152", features = ["derive"] }
+async-once-cell = "0.4.3"
