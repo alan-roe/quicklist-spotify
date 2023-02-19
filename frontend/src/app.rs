@@ -65,9 +65,13 @@ pub fn refresh_token() {
 
 #[static_ref]
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new(|DownMsg::Token(toke), _| {
-        println!("DownMsg: {:?}", toke);
-        token().set(toke);
+    Connection::new(|down_msg, _corId| {
+        match down_msg {
+            DownMsg::Token(toke) => {
+                println!("DownMsg: {:?}", toke);
+                token().set(toke);
+            }
+        }
     })
 }
 

@@ -76,7 +76,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
         UpMsg::RequestToken => DownMsg::Token(request_token().await.unwrap()),
     };
 
-    if let Some(session) = sessions::by_session_id().get(session_id) {
+    if let Some(session) = sessions::by_session_id().wait_for(session_id).await {
         session.send_down_msg(&down_msg, cor_id).await;
     } else {
         println!("Failed to get session {session_id}");
