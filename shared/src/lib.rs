@@ -5,14 +5,14 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum UpMsg {
-    SendQuery(String),
+    RequestToken,
 }
 
 // ------ DownMsg ------
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum DownMsg {
-    SearchResult(Track),
+    Token(rspotify::Token),
 }
 
 // ------ Track -------

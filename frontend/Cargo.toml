@@ -8,3 +8,4 @@ publish.workspace = true
 zoon.workspace = true
 shared = { path = "../shared", features = ["frontend"] }
 serde = { version = "1.0.152", features = ["derive"] }
+rspotify = {git = "https://github.com/ramsayleung/rspotify" }

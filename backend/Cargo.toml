@@ -10,3 +10,4 @@ shared = { path = "../shared", features = ["backend"] }
 rspotify = {git = "https://github.com/ramsayleung/rspotify" }
 serde = { version = "1.0.152", features = ["derive"] }
 async-once-cell = "0.4.3"
+anyhow = "1.0.69"
