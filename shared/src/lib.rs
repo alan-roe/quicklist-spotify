@@ -1,9 +1,9 @@
 use moonlight::*;
-use serde::{Deserialize, Serialize};
 
 // ------ UpMsg ------
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "serde")]
 pub enum UpMsg {
     RequestToken,
 }
@@ -11,6 +11,7 @@ pub enum UpMsg {
 // ------ DownMsg ------
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(crate = "serde")]
 pub enum DownMsg {
     Token(rspotify::Token),
 }
@@ -18,6 +19,7 @@ pub enum DownMsg {
 // ------ Track -------
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
+#[serde(crate = "serde")]
 pub struct Track {
     pub format: String,
     pub track_id: String,

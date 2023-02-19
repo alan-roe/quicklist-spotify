@@ -2,11 +2,11 @@ use async_once_cell::OnceCell;
 use moon::*;
 use rspotify::{
     self,
-    model::{SearchResult, SearchType},
     prelude::BaseClient,
     ClientCredsSpotify, Credentials, Token,
 };
 use shared::*;
+use async_recursion::async_recursion;
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -27,6 +27,7 @@ async fn frontend() -> Frontend {
 
 static CLIENT: OnceCell<ClientCredsSpotify> = OnceCell::new();
 
+#[async_recursion]
 async fn request_token() -> anyhow::Result<Token> {
     let client = CLIENT
         .get_or_init(async {
@@ -41,17 +42,23 @@ async fn request_token() -> anyhow::Result<Token> {
             client
         })
         .await;
-    let token = client.get_token().clone();
+    println!("Retrieving token...");
+    let token = client.get_token();
     let token = token.lock().await.unwrap().clone();
 
-    if let Some(token) = token {
-        Ok(token)
-    } else {
-        client.refresh_token().await?;
-        let token = client.get_token().clone();
-        let token = token.lock().await.unwrap().clone();
+    if let Some(token) = token {    
+        println!("Token retrieved!");
+        if token.is_expired() {
+            println!("Token expired, refreshing...");
+            client.refresh_token().await?;
 
-        Ok(token.unwrap())
+            request_token().await
+        } else {
+            println!("Valid token.");
+            Ok(token)
+        }   
+    } else {    
+        Err(anyhow::anyhow!("Couldn't retrieve token from client"))
     }
 }
 

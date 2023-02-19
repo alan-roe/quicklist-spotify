@@ -16,6 +16,11 @@ fn tracks() -> &'static MutableVec<Arc<Track>> {
 }
 
 #[static_ref]
+fn search_results() -> &'static MutableVec<Arc<Track>> {
+    MutableVec::new()
+}
+
+#[static_ref]
 fn current_track() -> &'static Mutable<Track> {
     Mutable::new(Track {
         format: "".to_owned(),
@@ -42,10 +47,12 @@ fn token() -> &'static Mutable<rspotify::Token> {
 
 #[static_ref]
 fn client() -> &'static Mutable<ClientCredsSpotify> {
+    refresh_token();
+    connection();
     Mutable::new(ClientCredsSpotify::from_token(token().get_cloned()))
 }
 
-fn request_token() {
+pub fn refresh_token() {
     Task::start(async {
         let result = connection()
             .send_up_msg(UpMsg::RequestToken)
@@ -54,11 +61,6 @@ fn request_token() {
             eprintln!("Failed to send message: {:?}", error);
         }
     });
-}
-
-pub fn init_client() {
-    request_token();
-    connection();
 }
 
 #[static_ref]
@@ -81,6 +83,15 @@ fn tracks_exist() -> impl Signal<Item = bool> {
     track_count().map(|count| count != 0).dedupe()
 }
 
+fn results_count() -> impl Signal<Item = usize> {
+    search_results().signal_vec_cloned().len()
+}
+
+fn results_exist() -> impl Signal<Item = bool> {
+    results_count().map(|count| count != 0).dedupe()
+}
+
+
 // ------ ------
 //   Commands
 // ------ ------
@@ -92,6 +103,7 @@ fn add_track() {
         .lock_mut()
         .push_cloned(Arc::new(current_track.clone()));
     save_tracks();
+    search_results().lock_mut().clear();
     new_query.clear();
 }
 
@@ -103,11 +115,8 @@ pub fn load_tracks() {
 }
 
 
-fn search() {
 
-    //if query.is_empty() {
-    //
-    //}
+fn search() {
     Task::start(async {
     
     let query = new_query().get_cloned();
@@ -130,13 +139,13 @@ fn search() {
                     title: track.name.clone(),
                     artist: track.artists[0].name.clone(),
                 });
+                let mut results = search_results().lock_mut();
+                results.clear();
+                results.push_cloned(Arc::new(current_track().get_cloned()));
             }
         }
     }
-    println!("lol");
     })
-    
-    
 }
 
 fn save_tracks() {
