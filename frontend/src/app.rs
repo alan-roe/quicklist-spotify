@@ -1,4 +1,8 @@
-use rspotify::{ClientCredsSpotify, model::{SearchResult, SearchType}, prelude::BaseClient};
+use rspotify::{
+    model::{SearchResult, SearchType},
+    prelude::BaseClient,
+    ClientCredsSpotify,
+};
 use shared::*;
 use std::sync::Arc;
 use zoon::{eprintln, println, *};
@@ -54,9 +58,7 @@ fn client() -> &'static Mutable<ClientCredsSpotify> {
 
 pub fn refresh_token() {
     Task::start(async {
-        let result = connection()
-            .send_up_msg(UpMsg::RequestToken)
-            .await;
+        let result = connection().send_up_msg(UpMsg::RequestToken).await;
         if let Err(error) = result {
             eprintln!("Failed to send message: {:?}", error);
         }
@@ -65,12 +67,10 @@ pub fn refresh_token() {
 
 #[static_ref]
 fn connection() -> &'static Connection<UpMsg, DownMsg> {
-    Connection::new(|down_msg, _corId| {
-        match down_msg {
-            DownMsg::Token(toke) => {
-                println!("DownMsg: {:?}", toke);
-                token().set(toke);
-            }
+    Connection::new(|down_msg, _cor_id| match down_msg {
+        DownMsg::Token(toke) => {
+            println!("DownMsg: {:?}", toke);
+            token().set(toke);
         }
     })
 }
@@ -95,7 +95,6 @@ fn results_exist() -> impl Signal<Item = bool> {
     results_count().map(|count| count != 0).dedupe()
 }
 
-
 // ------ ------
 //   Commands
 // ------ ------
@@ -118,37 +117,35 @@ pub fn load_tracks() {
     }
 }
 
-
-
 fn search() {
     Task::start(async {
-    
-    let query = new_query().get_cloned();
-    let query = query.trim();
-        if let Ok(search_result) = client().lock_ref()
-        .search(query, SearchType::Track, None, None, Some(1), None)
-        .await
-    {
-        use SearchResult::*;
+        let query = new_query().get_cloned();
+        let query = query.trim();
+        if let Ok(search_result) = client()
+            .lock_ref()
+            .search(query, SearchType::Track, None, None, Some(1), None)
+            .await
+        {
+            use SearchResult::*;
 
-        if let Tracks(track) = search_result {
-            if let Some(track) = track.items.first() {
-                //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
+            if let Tracks(track) = search_result {
+                if let Some(track) = track.items.first() {
+                    //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
 
-                let track = track.clone();
-                println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
-                current_track().set( Track {
-                    format: format!("{} - {}", &track.name, &track.artists[0].name),
-                    track_id: track.id.unwrap().to_string(),
-                    title: track.name.clone(),
-                    artist: track.artists[0].name.clone(),
-                });
-                let mut results = search_results().lock_mut();
-                results.clear();
-                results.push_cloned(Arc::new(current_track().get_cloned()));
+                    let track = track.clone();
+                    println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
+                    current_track().set(Track {
+                        format: format!("{} - {}", &track.name, &track.artists[0].name),
+                        track_id: track.id.unwrap().to_string(),
+                        title: track.name.clone(),
+                        artist: track.artists[0].name.clone(),
+                    });
+                    let mut results = search_results().lock_mut();
+                    results.clear();
+                    results.push_cloned(Arc::new(current_track().get_cloned()));
+                }
             }
         }
-    }
     })
 }
 

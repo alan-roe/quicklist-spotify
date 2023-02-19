@@ -49,14 +49,14 @@ fn panels() -> impl Element {
 
 fn search_results_panel() -> impl Element {
     Column::with_tag(Tag::Section)
-    .s(Shadows::new([
-        Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
-        Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
-    ]))
-    .s(Width::fill())
-    .s(Background::new().color(hsluv!(0, 0, 100)))
-    .item(search_track())
-    .item_signal(super::results_exist().map_true(search_results))
+        .s(Shadows::new([
+            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+        ]))
+        .s(Width::fill())
+        .s(Background::new().color(hsluv!(0, 0, 100)))
+        .item(search_track())
+        .item_signal(super::results_exist().map_true(search_results))
 }
 
 fn search_result(track: Arc<Track>) -> impl Element {
@@ -73,7 +73,11 @@ fn search_results() -> impl Element {
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         .s(Background::new().color(hsluv!(0, 0, 93.7)))
         .s(Gap::both(1))
-        .items_signal_vec(super::search_results().signal_vec_cloned().map(search_result))
+        .items_signal_vec(
+            super::search_results()
+                .signal_vec_cloned()
+                .map(search_result),
+        )
 }
 
 fn search_track() -> impl Element {
@@ -120,11 +124,10 @@ fn playlist_panel() -> impl Element {
         ]))
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
-       // .item(search_track())
+        // .item(search_track())
         .item_signal(super::tracks_exist().map_true(tracks))
         .item_signal(super::tracks_exist().map_true(panel_footer))
 }
-
 
 fn track(track: Arc<Track>) -> impl Element {
     Row::new()
