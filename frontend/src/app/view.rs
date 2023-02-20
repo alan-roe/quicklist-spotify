@@ -65,7 +65,8 @@ fn search_result(track: Arc<Track>) -> impl Element {
         .s(Background::new().color(hsluv!(0, 0, 100)))
         .s(Gap::both(5))
         .s(Font::new().size(24))
-        .item(search_info(track))
+        .item(search_info(track.clone()))
+        .on_click(move || add_track(Some(&track)))
 }
 
 fn search_results() -> impl Element {
@@ -98,7 +99,7 @@ fn search_track() -> impl Element {
                 .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
         )
         .on_key_down_event(|event| {
-            event.if_key(Key::Enter, super::add_track);
+            event.if_key(Key::Enter, || super::add_track(None));
             event.if_key(Key::Other(" ".to_string()), super::search)
         })
         .text_signal(super::new_query().signal_cloned())

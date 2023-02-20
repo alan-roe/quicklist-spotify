@@ -99,12 +99,12 @@ fn results_exist() -> impl Signal<Item = bool> {
 //   Commands
 // ------ ------
 
-fn add_track() {
+fn add_track(track: Option<&Track>) {
     let mut new_query = new_query().lock_mut();
     let current_track = current_track().lock_ref();
     tracks()
         .lock_mut()
-        .push_cloned(Arc::new(current_track.clone()));
+        .push_cloned(Arc::new(track.unwrap_or(&current_track).clone()));
     save_tracks();
     search_results().lock_mut().clear();
     new_query.clear();
