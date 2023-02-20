@@ -99,17 +99,19 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
             .blur(1)
             .color(hsluv!(0, 0, 0, 3))]))
         .focus_signal(focus)
-        .on_change(super::set_new_query)
+        .on_focus(super::start_search_timer)
+        .on_change(|new_query| {
+            super::set_new_query(new_query);
+            super::start_search_timer();
+        })
         .label_hidden("Start typing a song title/artist")
         .placeholder(
             Placeholder::new("Start typing a song title/artist")
                 .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
         )
         .on_key_down_event(|event| {
-            event.if_key(Key::Enter, || {
-                super::add_track(None);
-            });
-            event.if_key(Key::Other(" ".to_string()), super::search)
+            event.if_key(Key::Enter, || super::add_track(None));
+            event.if_key(Key::Other(" ".to_string()), super::search);
         })
         .text_signal(super::new_query().signal_cloned())
 }

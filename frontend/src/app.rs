@@ -59,19 +59,20 @@ fn client() -> &'static Mutable<ClientCredsSpotify> {
 // -- search timer --
 
 #[static_ref]
-fn seconds() -> &'static Mutable<u32> {
-    Mutable::new(0)
-}
-
-#[static_ref]
 fn search_timer() -> &'static Mutable<Option<Timer>> {
     Mutable::new(None)
 }
 
-fn search_timer_enabled() -> impl Signal<Item = bool> {
-    search_timer().signal_ref(Option::is_some)
+fn start_search_timer() {
+    search_timer().set(Some(Timer::new(750, || {
+        search();
+        stop_search_timer();
+    })));
 }
 
+fn stop_search_timer() {
+    search_timer().take();
+}
 
 pub fn refresh_token() {
     Task::start(async {
@@ -119,14 +120,17 @@ fn results_exist() -> impl Signal<Item = bool> {
 fn add_track(track: Option<&Track>) {
     let mut new_query = new_query().lock_mut();
     if !search_results().lock_ref().is_empty() {
-{            tracks()
-            .lock_mut()
-            .push_cloned(Arc::new(track.unwrap_or(search_results().lock_ref().first().unwrap()).clone()));}
+        {
+            tracks().lock_mut().push_cloned(Arc::new(
+                track
+                    .unwrap_or(search_results().lock_ref().first().unwrap())
+                    .clone(),
+            ));
+        }
         save_tracks();
         search_results().lock_mut().clear();
         new_query.clear();
     }
-    
 }
 
 pub fn load_tracks() {
@@ -140,9 +144,12 @@ fn search() {
     if token().lock_ref().is_expired() {
         refresh_token();
     }
-    Task::start(async {   
+    Task::start(async {
         let query = new_query().get_cloned();
         let query = query.trim();
+        if query.is_empty() {
+            return;
+        }
         if let Ok(search_result) = client()
             .lock_ref()
             .search(query, SearchType::Track, None, None, Some(5), None)
@@ -154,9 +161,9 @@ fn search() {
                 let mut results = search_results().lock_mut();
                 results.clear();
                 for track in tracks.items.into_iter() {
-                    //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
-                    println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
-        
+                    // format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
+                    // println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
+
                     results.push_cloned(Arc::new(Track {
                         format: format!("{} - {}", &track.name, &track.artists[0].name),
                         track_id: track.id.unwrap().to_string(),
