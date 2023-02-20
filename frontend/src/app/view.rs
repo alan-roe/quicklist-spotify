@@ -48,28 +48,35 @@ fn panels() -> impl Element {
 // ------ Search ------
 
 fn search_results_panel() -> impl Element {
+    let (focus, focus_signal) = Mutable::new_and_signal(false);
+
     Column::with_tag(Tag::Section)
         .s(Shadows::new([
             Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
             Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
         ]))
+        .s(Align::new().top())
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
-        .item(search_track())
-        .item_signal(super::results_exist().map_true(search_results))
+        .item(search_track(focus_signal))
+        .item_signal(super::results_exist().map_true(move || search_results(focus.clone())))
 }
 
-fn search_result(track: Arc<Track>) -> impl Element {
+fn search_result(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
     Row::new()
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
         .s(Gap::both(5))
         .s(Font::new().size(24))
         .item(search_info(track.clone()))
-        .on_click(move || add_track(Some(&track)))
+        .id(&track.track_id)
+        .on_click(move || {
+            add_track(Some(&track));
+            input_focus.set(true);
+        })
 }
 
-fn search_results() -> impl Element {
+fn search_results(input_focus: Mutable<bool>) -> impl Element {
     Column::new()
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         .s(Background::new().color(hsluv!(0, 0, 93.7)))
@@ -77,11 +84,11 @@ fn search_results() -> impl Element {
         .items_signal_vec(
             super::search_results()
                 .signal_vec_cloned()
-                .map(search_result),
+                .map(move |track| search_result(track, input_focus.clone())),
         )
 }
 
-fn search_track() -> impl Element {
+fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {
     TextInput::new()
         .s(Padding::all(15).y(19).right(60))
         .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
@@ -91,7 +98,7 @@ fn search_track() -> impl Element {
             .y(-2)
             .blur(1)
             .color(hsluv!(0, 0, 0, 3))]))
-        .focus(true)
+        .focus_signal(focus)
         .on_change(super::set_new_query)
         .label_hidden("Start typing a song title/artist")
         .placeholder(
@@ -99,7 +106,9 @@ fn search_track() -> impl Element {
                 .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
         )
         .on_key_down_event(|event| {
-            event.if_key(Key::Enter, || super::add_track(None));
+            event.if_key(Key::Enter, || {
+                super::add_track(None);
+            });
             event.if_key(Key::Other(" ".to_string()), super::search)
         })
         .text_signal(super::new_query().signal_cloned())
@@ -125,7 +134,6 @@ fn playlist_panel() -> impl Element {
         ]))
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
-        // .item(search_track())
         .item_signal(super::tracks_exist().map_true(tracks))
         .item_signal(super::tracks_exist().map_true(panel_footer))
 }

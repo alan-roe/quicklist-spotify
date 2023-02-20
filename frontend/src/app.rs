@@ -56,6 +56,23 @@ fn client() -> &'static Mutable<ClientCredsSpotify> {
     Mutable::new(ClientCredsSpotify::from_token(token().get_cloned()))
 }
 
+// -- search timer --
+
+#[static_ref]
+fn seconds() -> &'static Mutable<u32> {
+    Mutable::new(0)
+}
+
+#[static_ref]
+fn search_timer() -> &'static Mutable<Option<Timer>> {
+    Mutable::new(None)
+}
+
+fn search_timer_enabled() -> impl Signal<Item = bool> {
+    search_timer().signal_ref(Option::is_some)
+}
+
+
 pub fn refresh_token() {
     Task::start(async {
         let result = connection().send_up_msg(UpMsg::RequestToken).await;
@@ -120,7 +137,10 @@ pub fn load_tracks() {
 }
 
 fn search() {
-    Task::start(async {
+    if token().lock_ref().is_expired() {
+        refresh_token();
+    }
+    Task::start(async {   
         let query = new_query().get_cloned();
         let query = query.trim();
         if let Ok(search_result) = client()
