@@ -75,6 +75,7 @@ fn stop_search_timer() {
 }
 
 pub fn refresh_token() {
+    println!("Refreshing token");
     Task::start(async {
         let result = connection().send_up_msg(UpMsg::RequestToken).await;
         if let Err(error) = result {
@@ -89,6 +90,7 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
         DownMsg::Token(toke) => {
             println!("DownMsg: {:?}", toke);
             token().set(toke);
+            client().set(ClientCredsSpotify::from_token(token().get_cloned()));
         }
     })
 }
@@ -148,6 +150,7 @@ fn search() {
         let query = new_query().get_cloned();
         let query = query.trim();
         if query.is_empty() {
+            search_results().lock_mut().clear();
             return;
         }
         if let Ok(search_result) = client()
