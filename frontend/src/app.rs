@@ -101,13 +101,15 @@ fn results_exist() -> impl Signal<Item = bool> {
 
 fn add_track(track: Option<&Track>) {
     let mut new_query = new_query().lock_mut();
-    let current_track = current_track().lock_ref();
-    tracks()
-        .lock_mut()
-        .push_cloned(Arc::new(track.unwrap_or(&current_track).clone()));
-    save_tracks();
-    search_results().lock_mut().clear();
-    new_query.clear();
+    if !search_results().lock_ref().is_empty() {
+{            tracks()
+            .lock_mut()
+            .push_cloned(Arc::new(track.unwrap_or(search_results().lock_ref().first().unwrap()).clone()));}
+        save_tracks();
+        search_results().lock_mut().clear();
+        new_query.clear();
+    }
+    
 }
 
 pub fn load_tracks() {
@@ -123,26 +125,24 @@ fn search() {
         let query = query.trim();
         if let Ok(search_result) = client()
             .lock_ref()
-            .search(query, SearchType::Track, None, None, Some(1), None)
+            .search(query, SearchType::Track, None, None, Some(5), None)
             .await
         {
             use SearchResult::*;
 
-            if let Tracks(track) = search_result {
-                if let Some(track) = track.items.first() {
+            if let Tracks(tracks) = search_result {
+                let mut results = search_results().lock_mut();
+                results.clear();
+                for track in tracks.items.into_iter() {
                     //                        format!("Title: {} | Artist: {} | Track ID: {}", track.name, track.artists[0].name, track.id.as_ref().unwrap())
-
-                    let track = track.clone();
                     println!("Title: {} | Artist: {}", &track.name, track.artists[0].name);
-                    current_track().set(Track {
+        
+                    results.push_cloned(Arc::new(Track {
                         format: format!("{} - {}", &track.name, &track.artists[0].name),
                         track_id: track.id.unwrap().to_string(),
                         title: track.name.clone(),
                         artist: track.artists[0].name.clone(),
-                    });
-                    let mut results = search_results().lock_mut();
-                    results.clear();
-                    results.push_cloned(Arc::new(current_track().get_cloned()));
+                    }));
                 }
             }
         }
