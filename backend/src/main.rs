@@ -2,7 +2,10 @@ use async_once_cell::OnceCell;
 use async_recursion::async_recursion;
 use moon::*;
 use rspotify::{self, prelude::BaseClient, ClientCredsSpotify, Credentials, Token};
-use shared::*;
+use shared::{
+    rspotify::{prelude::OAuthClient, scopes, AuthCodeSpotify, OAuth},
+    *,
+};
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -58,6 +61,57 @@ async fn request_token() -> anyhow::Result<Token> {
     }
 }
 
+async fn request_auth_token(data: AuthResponseData) -> anyhow::Result<Token> {
+    let creds = Credentials {
+        id: "***REMOVED***".to_owned(),
+        secret: Some("***REMOVED***".to_owned()),
+    };
+    let oauth = OAuth {
+        redirect_uri: "http://192.168.1.2:8080".to_string(),
+        scopes: scopes!("playlist-modify-private"),
+        state: data.state,
+        ..Default::default()
+    };
+
+    let auth_client = AuthCodeSpotify::new(creds, oauth);
+    let response_url = data.response_url;
+
+    if let Some(code) = auth_client.parse_response_code(&response_url) {
+        println!("Successful response code parse, requesting token");
+        if auth_client.request_token(&code).await.is_ok() {
+            println!("Successful token request!");
+        };
+    } else {
+        println!("failed to parse response code: {}", &response_url);
+    }
+    Ok(auth_client
+        .get_token()
+        .lock()
+        .await
+        .unwrap()
+        .clone()
+        .unwrap())
+}
+
+async fn request_auth_data() -> anyhow::Result<AuthData> {
+    let oauth = OAuth {
+        redirect_uri: "http://192.168.1.2:8080".to_string(),
+        scopes: scopes!("playlist-modify-private", "playlist-read-private"),
+        ..Default::default()
+    };
+
+    let creds = Credentials {
+        id: "***REMOVED***".to_owned(),
+        secret: Some("***REMOVED***".to_owned()),
+    };
+
+    let spotify = AuthCodeSpotify::new(creds, oauth.clone());
+    Ok(AuthData {
+        url: spotify.get_authorize_url(false)?,
+        state: oauth.state,
+    })
+}
+
 async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
     println!("{:?}", req);
 
@@ -70,6 +124,10 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
 
     let down_msg = match up_msg {
         UpMsg::RequestToken => DownMsg::Token(request_token().await.unwrap()),
+        UpMsg::RequestAuthData => DownMsg::AuthData(request_auth_data().await.unwrap()),
+        UpMsg::RequestAuthToken(data) => {
+            DownMsg::AuthToken(request_auth_token(data).await.unwrap())
+        }
     };
 
     if let Some(session) = sessions::by_session_id().wait_for(session_id).await {

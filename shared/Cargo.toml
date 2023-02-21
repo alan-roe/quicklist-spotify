@@ -6,7 +6,7 @@ publish.workspace = true
 
 [dependencies]
 moonlight.workspace = true
-rspotify = {git = "https://github.com/alan-roe/rspotify" }
+rspotify = {git = "https://github.com/alan-roe/rspotify"}
 
 [features]
 frontend = ["moonlight/frontend"]

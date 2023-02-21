@@ -3,9 +3,18 @@ use rspotify::{
     prelude::BaseClient,
     ClientCredsSpotify,
 };
-use shared::*;
-use std::sync::Arc;
-use zoon::{eprintln, println, *};
+use shared::{
+    rspotify::{
+        model::TrackId,
+        prelude::{OAuthClient, PlayableId},
+        AuthCodeSpotify,
+    },
+    *,
+};
+use std::{borrow::Cow, sync::Arc};
+use zoon::{eprintln, println, web_storage::Result, *};
+mod login_window;
+use crate::router::router;
 pub mod view;
 
 static STORAGE_KEY: &str = "quicklist-spotify";
@@ -45,8 +54,37 @@ fn new_query() -> &'static Mutable<String> {
 }
 
 #[static_ref]
+fn playlist_name() -> &'static Mutable<String> {
+    Mutable::new(String::new())
+}
+
+#[static_ref]
+fn username() -> &'static Mutable<String> {
+    Mutable::new(String::new())
+}
+
+#[static_ref]
+fn login_error() -> &'static Mutable<Option<Cow<'static, str>>> {
+    Mutable::new(None)
+}
+
+#[static_ref]
+fn password() -> &'static Mutable<String> {
+    Mutable::new(String::new())
+}
+
+#[static_ref]
 fn token() -> &'static Mutable<rspotify::Token> {
     Mutable::new(rspotify::Token::default())
+}
+
+#[static_ref]
+fn auth_token() -> &'static Mutable<rspotify::Token> {
+    if let Ok(token) = retrieve_local("auth-token") {
+        token
+    } else {
+        Mutable::new(rspotify::Token::default())
+    }
 }
 
 #[static_ref]
@@ -54,6 +92,31 @@ fn client() -> &'static Mutable<ClientCredsSpotify> {
     refresh_token();
     connection();
     Mutable::new(ClientCredsSpotify::from_token(token().get_cloned()))
+}
+
+#[static_ref]
+fn auth_client() -> &'static Mutable<AuthCodeSpotify> {
+    Mutable::new(AuthCodeSpotify::from_token(auth_token().get_cloned()))
+}
+
+#[static_ref]
+fn auth_url() -> &'static Mutable<String> {
+    Mutable::new(String::default())
+}
+
+#[static_ref]
+fn auth_state() -> &'static Mutable<String> {
+    if let Some(Ok(state)) = local_storage().get("quicklist-spotify-state") {
+        println!("state loaded");
+        Mutable::new(state)
+    } else {
+        Mutable::new(String::default())
+    }
+}
+
+#[static_ref]
+pub fn response_url() -> &'static Mutable<String> {
+    Mutable::new(String::new())
 }
 
 // -- search timer --
@@ -92,7 +155,39 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
             token().set(toke);
             client().set(ClientCredsSpotify::from_token(token().get_cloned()));
         }
+        DownMsg::AuthToken(token) => {
+            println!("DownMsg: {:?}", token);
+            auth_token().set(token);
+            auth_client().set(AuthCodeSpotify::from_token(auth_token().get_cloned()));
+            store_local("auth-token", auth_token());
+        }
+        DownMsg::AuthData(data) => {
+            println!("{:?}", &data);
+            auth_url().set(data.url);
+            auth_state().set(data.state);
+            store_local("state", auth_state());
+            router().go(auth_url().get_cloned());
+        }
     })
+}
+
+fn store_local<T: Serialize + ?Sized>(key: &str, val: &T) {
+    let key = STORAGE_KEY.to_owned() + "-" + key;
+    if let Err(e) = local_storage().insert(&key, val) {
+        eprintln!("Saving {key} to local storage failed: {e}");
+    }
+}
+
+fn retrieve_local<T: DeserializeOwned>(key: &str) -> Result<Mutable<T>> {
+    let key = STORAGE_KEY.to_owned() + "-" + key;
+    match local_storage().get(&key) {
+        Some(Ok(val)) => {
+            println!("{key} loaded");
+            Ok(Mutable::new(val))
+        }
+        Some(Err(e)) => Err(e),
+        None => Err(web_storage::Error::StorageNotFoundError),
+    }
 }
 
 // ------ ------
@@ -118,6 +213,40 @@ fn results_exist() -> impl Signal<Item = bool> {
 // ------ ------
 //   Commands
 // ------ ------
+
+fn create_playlist() {
+    Task::start(async {
+        let client = auth_client().lock_ref();
+        let user_id = client.current_user().await.unwrap().id;
+
+        if let Ok(r) = client
+            .user_playlist_create(
+                user_id,
+                &playlist_name().get_cloned(),
+                Some(false),
+                Some(false),
+                Some("Playlist created by QuickList"),
+            )
+            .await
+        {
+            if let Ok(r) = client
+                .playlist_add_items(
+                    r.id.clone(),
+                    tracks()
+                        .lock_ref()
+                        .iter()
+                        .map(|t| PlayableId::Track(TrackId::from_uri(&t.track_id).unwrap())),
+                    None,
+                )
+                .await
+            {
+                println!("Create playlist success!\n{:?}", r);
+            };
+        } else {
+            println!("Failed to create playlist :(");
+        }
+    })
+}
 
 fn add_track(track: Option<&Track>) {
     let mut new_query = new_query().lock_mut();
@@ -201,4 +330,39 @@ fn remove_track(id: &str) {
         .lock_mut()
         .retain(|track| track.track_id.as_str() != id);
     save_tracks();
+}
+
+fn request_auth_url() {
+    Task::start(async {
+        let result = connection().send_up_msg(UpMsg::RequestAuthData).await;
+        if let Err(e) = result {
+            println!("failed to get auth url {e}");
+        }
+    })
+}
+
+fn auth_data() -> AuthResponseData {
+    AuthResponseData {
+        response_url: response_url().get_cloned(),
+        state: auth_state().get_cloned(),
+    }
+}
+
+fn request_auth_token() {
+    Task::start(async {
+        let result = connection()
+            .send_up_msg(UpMsg::RequestAuthToken(auth_data()))
+            .await;
+        if let Err(e) = result {
+            println!("failed to get auth token {e}");
+        }
+    })
+}
+
+pub fn authorize_client() {
+    request_auth_token()
+}
+
+fn login() {
+    request_auth_url();
 }

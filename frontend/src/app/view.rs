@@ -25,6 +25,7 @@ fn content() -> impl Element {
                 .item(panels())
                 .item(footer()),
         )
+        .item(super::login_window::login_window())
 }
 
 fn header() -> impl Element {
@@ -136,8 +137,30 @@ fn playlist_panel() -> impl Element {
         ]))
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
+        .item(playlist_name())
         .item_signal(super::tracks_exist().map_true(tracks))
         .item_signal(super::tracks_exist().map_true(panel_footer))
+}
+
+fn playlist_name() -> impl Element {
+    TextInput::new()
+        .s(Padding::all(15).y(19).right(60))
+        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+        .s(Shadows::new([Shadow::new()
+            .inner()
+            .y(-2)
+            .blur(1)
+            .color(hsluv!(0, 0, 0, 3))]))
+        .on_change(|s| super::playlist_name().set(s))
+        .label_hidden("Playlist Name")
+        .placeholder(
+            Placeholder::new("Playlist Name").s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
+        )
+        .on_key_down_event(|event| {
+            event.if_key(Key::Enter, super::create_playlist);
+        })
+        .text_signal(super::playlist_name().signal_cloned())
 }
 
 fn track(track: Arc<Track>) -> impl Element {
