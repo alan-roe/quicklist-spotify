@@ -160,6 +160,7 @@ fn connection() -> &'static Connection<UpMsg, DownMsg> {
             auth_token().set(token);
             auth_client().set(AuthCodeSpotify::from_token(auth_token().get_cloned()));
             store_local("auth-token", auth_token());
+            router().replace(routing::origin());
         }
         DownMsg::AuthData(data) => {
             println!("{:?}", &data);
