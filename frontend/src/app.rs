@@ -13,7 +13,6 @@ use shared::{
 };
 use std::{borrow::Cow, sync::Arc};
 use zoon::{eprintln, println, web_storage::Result, *};
-mod login_window;
 use crate::router::router;
 pub mod view;
 
@@ -211,6 +210,16 @@ fn results_exist() -> impl Signal<Item = bool> {
     results_count().map(|count| count != 0).dedupe()
 }
 
+fn auth_token_expired() -> impl Signal<Item = bool> {
+    auth_token().signal_ref(|t| t.is_expired())
+}
+
+#[static_ref]
+fn playlist_created() -> &'static Mutable<bool> {
+    Mutable::new(false)
+}
+
+
 // ------ ------
 //   Commands
 // ------ ------
@@ -241,6 +250,7 @@ fn create_playlist() {
                 )
                 .await
             {
+                playlist_created().set(true);
                 println!("Create playlist success!\n{:?}", r);
             };
         } else {

@@ -25,7 +25,6 @@ fn content() -> impl Element {
                 .item(panels())
                 .item(footer()),
         )
-        .item(super::login_window::login_window())
 }
 
 fn header() -> impl Element {
@@ -143,24 +142,70 @@ fn playlist_panel() -> impl Element {
 }
 
 fn playlist_name() -> impl Element {
-    TextInput::new()
-        .s(Padding::all(15).y(19).right(60))
-        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
-        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-        .s(Shadows::new([Shadow::new()
-            .inner()
-            .y(-2)
-            .blur(1)
-            .color(hsluv!(0, 0, 0, 3))]))
-        .on_change(|s| super::playlist_name().set(s))
-        .label_hidden("Playlist Name")
-        .placeholder(
-            Placeholder::new("Playlist Name").s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
-        )
-        .on_key_down_event(|event| {
-            event.if_key(Key::Enter, super::create_playlist);
+    Row::new()
+        .s(Padding::new().right(15))
+        .item(playlist_input())
+        .item_signal(super::auth_token_expired().map_bool(login_button,  playlist_create_button)
+            )
+}
+
+fn playlist_create_button() -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Background::new().color_signal(
+            hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
+        ))
+        .s(Font::new()
+            .color(hsluv!(0, 0, 5.1))
+            .weight(FontWeight::Bold))
+        .s(Padding::new().x(20).y(10))
+        .s(RoundedCorners::all(4))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(|| {
+            if !super::playlist_created().get() {
+                super::create_playlist();
+            }
         })
-        .text_signal(super::playlist_name().signal_cloned())
+        .label_signal(super::playlist_created().signal().map_bool(|| "Created", || "Create"))
+}
+
+
+fn login_button() -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
+    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
+    Button::new()
+        .s(Background::new().color_signal(
+            hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
+        ))
+        .s(Font::new()
+            .color(hsluv!(0, 0, 5.1))
+            .weight(FontWeight::Bold))
+        .s(Padding::new().x(20).y(10))
+        .s(RoundedCorners::all(4))
+        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+        .on_press(super::login)
+        .label("Log in")
+}
+
+fn playlist_input() -> impl Element {
+    TextInput::new()
+    .s(Padding::all(15).y(19).right(60))
+    .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+    .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+    .s(Shadows::new([Shadow::new()
+        .inner()
+        .y(-2)
+        .blur(1)
+        .color(hsluv!(0, 0, 0, 3))]))
+    .on_change(|s| super::playlist_name().set(s))
+    .label_hidden("Playlist Name")
+    .placeholder(
+        Placeholder::new("Playlist Name")
+            .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
+    )
+    .on_key_down_event(|event| {
+        event.if_key(Key::Enter, super::create_playlist);
+    })
+    .text_signal(super::playlist_name().signal_cloned())
 }
 
 fn track(track: Arc<Track>) -> impl Element {
