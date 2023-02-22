@@ -67,7 +67,7 @@ async fn request_auth_token(data: AuthResponseData) -> anyhow::Result<Token> {
         secret: Some("***REMOVED***".to_owned()),
     };
     let oauth = OAuth {
-        redirect_uri: "http://192.168.1.2:8080".to_string(),
+        redirect_uri: "http://***REMOVED***:8080".to_string(),
         scopes: scopes!("playlist-modify-private"),
         state: data.state,
         ..Default::default()
@@ -95,7 +95,7 @@ async fn request_auth_token(data: AuthResponseData) -> anyhow::Result<Token> {
 
 async fn request_auth_data() -> anyhow::Result<AuthData> {
     let oauth = OAuth {
-        redirect_uri: "http://192.168.1.2:8080".to_string(),
+        redirect_uri: "http://***REMOVED***:8080".to_string(),
         scopes: scopes!("playlist-modify-private", "playlist-read-private"),
         ..Default::default()
     };
