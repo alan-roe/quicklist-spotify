@@ -8,7 +8,6 @@ env:
 
 jobs:
   build:
-
     runs-on: ubuntu-20.04
 
     steps:
@@ -25,12 +24,29 @@ jobs:
       run: cargo install mzoon --git https://github.com/MoonZoon/MoonZoon --locked
     - name: Build
       run: mzoon build -r
+    - name: Create build
+      run: |
+        mkdir ./build
+        mv ./target/release/backend ./build/backend
+        chmod +x ./build/backend
+        mv ./frontend ./build/frontend
+        mv ./public ./build/public
+    - name: Create .env
+      uses: SpicyPizza/create-envfile@v1.3
+      with: 
+        envkey_REDIRECT_URI: ${{ secrets.REDIRECT_URI }}
+        envkey_SECRET_KEY: ${{ secrets.SECRET_KEY }}
+        envkey_CLIENT_ID: ${{ secrets.CLIENT_ID }}
+        envkey_CLIENT_SECRET: ${{ secrets.CLIENT_SECRET }}
+        directory: ./build
+        file_name: .env
+        fail_on_empty: false
     # Upload Artifact
-    - name: Upload production-ready build files
+    - name: Upload build
       uses: actions/upload-artifact@v3
       with:
-        name: production
+        name: build
         path: |
-          ./target/release/backend
-          ./frontend
-          ./public
+          ./build
+    - name: Upload coverage reports to Codecov
+      uses: codecov/codecov-action@v3

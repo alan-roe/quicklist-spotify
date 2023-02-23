@@ -125,7 +125,7 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
-    dotenv::from_path("./backend/private/.env").unwrap_or_default();
+    dotenv::from_path("./.env").unwrap_or_default();
 
     let creds = Credentials {
         id: env::var("CLIENT_ID").unwrap(),
