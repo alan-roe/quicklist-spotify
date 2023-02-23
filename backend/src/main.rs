@@ -1,4 +1,4 @@
-use async_once_cell::OnceCell;
+use once_cell::sync::OnceCell;
 use async_recursion::async_recursion;
 use moon::*;
 use rspotify::{self, prelude::BaseClient, ClientCredsSpotify, Credentials, Token};
@@ -6,6 +6,8 @@ use shared::{
     rspotify::{prelude::OAuthClient, scopes, AuthCodeSpotify, OAuth},
     *,
 };
+
+use std::env;
 
 async fn frontend() -> Frontend {
     Frontend::new()
@@ -25,23 +27,13 @@ async fn frontend() -> Frontend {
 }
 
 static CLIENT: OnceCell<ClientCredsSpotify> = OnceCell::new();
+static CREDS: OnceCell<Credentials> = OnceCell::new();
+static REDIRECT_URI: OnceCell<String> = OnceCell::new();
 
 #[async_recursion]
 async fn request_token() -> anyhow::Result<Token> {
-    let client = CLIENT
-        .get_or_init(async {
-            let creds = Credentials {
-                id: "***REMOVED***".to_owned(),
-                secret: Some("***REMOVED***".to_owned()),
-            };
-            println!("Creds\nid: {}\nsecret: {:?}", &creds.id, &creds.secret);
-
-            let client = ClientCredsSpotify::new(creds);
-            client.request_token().await.unwrap();
-            client
-        })
-        .await;
     println!("Retrieving token...");
+    let client = CLIENT.get().unwrap();
     let token = client.get_token();
     let token = token.lock().await.unwrap().clone();
 
@@ -62,12 +54,9 @@ async fn request_token() -> anyhow::Result<Token> {
 }
 
 async fn request_auth_token(data: AuthResponseData) -> anyhow::Result<Token> {
-    let creds = Credentials {
-        id: "***REMOVED***".to_owned(),
-        secret: Some("***REMOVED***".to_owned()),
-    };
+    let creds = CREDS.get().unwrap().clone();
     let oauth = OAuth {
-        redirect_uri: "http://***REMOVED***:8080".to_string(),
+        redirect_uri: REDIRECT_URI.get().unwrap().to_owned(),
         scopes: scopes!("playlist-modify-private"),
         state: data.state,
         ..Default::default()
@@ -95,15 +84,12 @@ async fn request_auth_token(data: AuthResponseData) -> anyhow::Result<Token> {
 
 async fn request_auth_data() -> anyhow::Result<AuthData> {
     let oauth = OAuth {
-        redirect_uri: "http://***REMOVED***:8080".to_string(),
+        redirect_uri: REDIRECT_URI.get().unwrap().to_owned(),
         scopes: scopes!("playlist-modify-private", "playlist-read-private"),
         ..Default::default()
     };
 
-    let creds = Credentials {
-        id: "***REMOVED***".to_owned(),
-        secret: Some("***REMOVED***".to_owned()),
-    };
+    let creds = CREDS.get().unwrap().clone();
 
     let spotify = AuthCodeSpotify::new(creds, oauth.clone());
     Ok(AuthData {
@@ -139,5 +125,26 @@ async fn up_msg_handler(req: UpMsgRequest<UpMsg>) {
 
 #[moon::main]
 async fn main() -> std::io::Result<()> {
+    dotenv::from_path("./backend/private/.env").unwrap_or_default();
+
+    let creds = Credentials {
+        id: env::var("CLIENT_ID").unwrap(),
+        secret: Some(env::var("CLIENT_SECRET").unwrap()),
+    };
+
+    let client = async {  
+        println!("Creds\nid: {}\nsecret: {:?}", &creds.id, &creds.secret);
+
+        let client = ClientCredsSpotify::new(creds.clone());
+        client.request_token().await.unwrap();
+        client
+    }.await;
+
+    CREDS.set(creds).unwrap();
+    CLIENT
+        .set(client).unwrap();
+
+    REDIRECT_URI.set(env::var("REDIRECT_URI").unwrap()).unwrap();
+
     start(frontend, up_msg_handler, |_| {}).await
 }
