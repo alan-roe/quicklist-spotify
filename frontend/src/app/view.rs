@@ -143,13 +143,14 @@ fn playlist_panel() -> impl Element {
 
 fn playlist_name() -> impl Element {
     Row::new()
-        .s(Padding::new().right(15))
-        .item(playlist_input())
-        .item_signal(super::auth_token_expired().map_bool(login_button,  playlist_create_button)
-            )
+        .s(Padding::new().right(5))
+        .s(Gap::both(5))
+        .item(playlist_name_input())
+        .item_signal(super::auth_token_expired().map_bool(login_button, playlist_create_button))
 }
 
-fn playlist_create_button() -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
+fn playlist_create_button(
+) -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new().color_signal(
@@ -166,11 +167,15 @@ fn playlist_create_button() -> Button<button::LabelFlagSet, button::OnPressFlagS
                 super::create_playlist();
             }
         })
-        .label_signal(super::playlist_created().signal().map_bool(|| "Created", || "Create"))
+        .label_signal(
+            super::playlist_created()
+                .signal()
+                .map_bool(|| "Created", || "Create"),
+        )
 }
 
-
-fn login_button() -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
+fn login_button(
+) -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     Button::new()
         .s(Background::new().color_signal(
@@ -186,26 +191,33 @@ fn login_button() -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtm
         .label("Log in")
 }
 
-fn playlist_input() -> impl Element {
+fn playlist_name_input() -> impl Element {
+    let (focus, focus_signal) = Mutable::new_and_signal(false);
+    let text_signal = super::playlist_name().signal_cloned();
     TextInput::new()
-    .s(Padding::all(15).y(19).right(60))
-    .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
-    .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-    .s(Shadows::new([Shadow::new()
-        .inner()
-        .y(-2)
-        .blur(1)
-        .color(hsluv!(0, 0, 0, 3))]))
-    .on_change(|s| super::playlist_name().set(s))
-    .label_hidden("Playlist Name")
-    .placeholder(
-        Placeholder::new("Playlist Name")
-            .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
-    )
-    .on_key_down_event(|event| {
-        event.if_key(Key::Enter, super::create_playlist);
-    })
-    .text_signal(super::playlist_name().signal_cloned())
+        .s(Padding::all(15).y(19).right(60))
+        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+        .s(Borders::all_signal(focus_signal.map_bool(
+            || Border::new().color(hsluv!(0, 0, 63.2)),
+            || Border::new().color(hsluv!(0, 0, 91.03)),
+        )))
+        .s(Shadows::new([Shadow::new()
+            .inner()
+            .y(-2)
+            .blur(1)
+            .color(hsluv!(0, 0, 0, 3))]))
+        .s(Font::new().color(hsluv!(0, 0, 32.7)))
+        .on_focused_change(move |f| focus.set_neq(f))
+        .label_hidden("playlist name")
+        .on_blur(super::store_playlist_name)
+        .on_change(move |text| super::playlist_name().set_neq(text))
+        .on_key_down_event(|event| match event.key() {
+            Key::Escape => super::reload_playlist_name(),
+            Key::Enter => super::store_playlist_name(),
+            _ => (),
+        })
+        .text_signal(text_signal)
 }
 
 fn track(track: Arc<Track>) -> impl Element {

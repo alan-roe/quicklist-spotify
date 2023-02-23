@@ -1,3 +1,4 @@
+use crate::router::router;
 use rspotify::{
     model::{SearchResult, SearchType},
     prelude::BaseClient,
@@ -13,7 +14,6 @@ use shared::{
 };
 use std::{borrow::Cow, sync::Arc};
 use zoon::{eprintln, println, web_storage::Result, *};
-use crate::router::router;
 pub mod view;
 
 static STORAGE_KEY: &str = "quicklist-spotify";
@@ -54,7 +54,21 @@ fn new_query() -> &'static Mutable<String> {
 
 #[static_ref]
 fn playlist_name() -> &'static Mutable<String> {
-    Mutable::new(String::new())
+    if let Ok(name) = retrieve_local("playlist-name") {
+        name
+    } else {
+        Mutable::new(String::new())
+    }
+}
+
+fn store_playlist_name() {
+    store_local("playlist-name", playlist_name())
+}
+
+fn reload_playlist_name() {
+    if let Ok(name) = retrieve_local("playlist-name") {
+        playlist_name().set(name.get_cloned());
+    }
 }
 
 #[static_ref]
@@ -218,7 +232,6 @@ fn auth_token_expired() -> impl Signal<Item = bool> {
 fn playlist_created() -> &'static Mutable<bool> {
     Mutable::new(false)
 }
-
 
 // ------ ------
 //   Commands
