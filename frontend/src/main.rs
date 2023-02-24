@@ -1,6 +1,6 @@
 mod app;
-mod router;
 mod elements;
+mod router;
 use zoon::*;
 
 fn main() {

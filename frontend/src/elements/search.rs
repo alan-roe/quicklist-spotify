@@ -1,6 +1,5 @@
 use std::iter;
-use zoon::{*, events::Focus};
-use std::{cell::RefCell, rc::Rc};
+use zoon::*;
 
 make_event!(BxSearchInput, "bx-search-input" => web_sys::CustomEvent);
 
@@ -41,15 +40,9 @@ impl Search<RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
-impl<RE: RawEl> Focusable for Search<RE>
-where
-    RE::DomElement: AsRef<web_sys::HtmlElement>,
-     {}
+impl<RE: RawEl> Focusable for Search<RE> where RE::DomElement: AsRef<web_sys::HtmlElement> {}
 
-impl<RE: RawEl> KeyboardEventAware for Search<RE>
-     where
-         RE::DomElement: AsRef<web_sys::HtmlElement>,
-          {}
+impl<RE: RawEl> KeyboardEventAware for Search<RE> where RE::DomElement: AsRef<web_sys::HtmlElement> {}
 
 impl<RE: RawEl> UpdateRawEl for Search<RE> {
     type RawEl = RE;

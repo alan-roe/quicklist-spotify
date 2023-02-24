@@ -1,6 +1,6 @@
-use once_cell::sync::OnceCell;
 use async_recursion::async_recursion;
 use moon::*;
+use once_cell::sync::OnceCell;
 use rspotify::{self, prelude::BaseClient, ClientCredsSpotify, Credentials, Token};
 use shared::{
     rspotify::{prelude::OAuthClient, scopes, AuthCodeSpotify, OAuth},
@@ -135,17 +135,17 @@ async fn main() -> std::io::Result<()> {
         secret: Some(env::var("CLIENT_SECRET").unwrap()),
     };
 
-    let client = async {  
+    let client = async {
         println!("Creds\nid: {}\nsecret: {:?}", &creds.id, &creds.secret);
 
         let client = ClientCredsSpotify::new(creds.clone());
         client.request_token().await.unwrap();
         client
-    }.await;
+    }
+    .await;
 
     CREDS.set(creds).unwrap();
-    CLIENT
-        .set(client).unwrap();
+    CLIENT.set(client).unwrap();
 
     REDIRECT_URI.set(env::var("REDIRECT_URI").unwrap()).unwrap();
 
