@@ -1,5 +1,5 @@
 use super::*;
-use crate::elements::Search;
+use crate::elements::{Search, Input};
 
 pub fn root() -> impl Element {
     Column::new()
@@ -88,7 +88,7 @@ fn search_results(input_focus: Mutable<bool>) -> impl Element {
         )
 }
 
-fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {
+fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {    
     Search::new()
         .focus_signal(focus)
         .on_focus(super::start_search_timer)
@@ -116,14 +116,17 @@ fn search_info(track: Arc<Track>) -> impl Element {
 
 // ------ Playlist ------
 
-fn playlist_panel() -> impl Element {
+fn playlist_panel() -> impl Element {    
     Column::with_tag(Tag::Section)
-        .s(Shadows::new([
-            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
-        ]))
-        .s(Width::fill())
-        .s(Background::new().color(hsluv!(0, 0, 100)))
+        // .s(Shadows::new([
+        //     Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+        //     Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+        // ]))
+        // .s(Width::fill())
+        // .s(Background::new().color(hsluv!(0, 0, 100)))
+        .s(Align::new().top())
+        .s(AlignContent::new().top())
+    
         .item(playlist_name())
         .item_signal(super::tracks_exist().map_true(tracks))
         .item_signal(super::tracks_exist().map_true(panel_footer))
@@ -131,25 +134,26 @@ fn playlist_panel() -> impl Element {
 
 fn playlist_name() -> impl Element {
     Row::new()
-        .s(Padding::new().right(5))
-        .s(Gap::both(5))
-        .item(playlist_name_input())
-        .item_signal(super::auth_token_expired().map_bool(login_button, playlist_create_button))
+    //  .s(Padding::new().right(5))
+    //  .s(Gap::both(5))
+    .s(Align::new().top())
+    .s(AlignContent::new().top())
+    .item(playlist_name_input())
+    .item_signal(super::auth_token_expired().map_bool(|| login_button().left_either(), || login_button().right_either()))
+    
 }
 
 fn playlist_create_button(
-) -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    Button::new()
-        .s(Background::new().color_signal(
-            hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
-        ))
-        .s(Font::new()
-            .color(hsluv!(0, 0, 5.1))
-            .weight(FontWeight::Bold))
-        .s(Padding::new().x(20).y(10))
-        .s(RoundedCorners::all(4))
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+) -> impl Element {
+    crate::elements::Button::new()
+        // .s(Background::new().color_signal(
+        //     hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
+        // ))
+        // .s(Font::new()
+        //     .color(hsluv!(0, 0, 5.1))
+        //     .weight(FontWeight::Bold))
+        // .s(Padding::new().x(20).y(10))
+        // .s(RoundedCorners::all(4))
         .on_press(|| {
             if !super::playlist_created().get() {
                 super::create_playlist();
@@ -163,41 +167,40 @@ fn playlist_create_button(
 }
 
 fn login_button(
-) -> Button<button::LabelFlagSet, button::OnPressFlagSet, RawHtmlEl<web_sys::HtmlDivElement>> {
-    let (hovered, hovered_signal) = Mutable::new_and_signal(false);
-    Button::new()
-        .s(Background::new().color_signal(
-            hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
-        ))
-        .s(Font::new()
-            .color(hsluv!(0, 0, 5.1))
-            .weight(FontWeight::Bold))
-        .s(Padding::new().x(20).y(10))
-        .s(RoundedCorners::all(4))
-        .on_hovered_change(move |is_hovered| hovered.set_neq(is_hovered))
+) -> impl Element {
+    crate::elements::Button::new()
+        // .s(Background::new().color_signal(
+        //     hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
+        // ))
+        // .s(Font::new()
+        //     .color(hsluv!(0, 0, 5.1))
+        //     .weight(FontWeight::Bold))
+        // .s(Padding::new().x(20).y(10))
+        // .s(RoundedCorners::all(4))
+        .size("sm")
         .on_press(super::login)
         .label("Log in")
 }
 
 fn playlist_name_input() -> impl Element {
-    let (focus, focus_signal) = Mutable::new_and_signal(false);
     let text_signal = super::playlist_name().signal_cloned();
-    TextInput::new()
-        .s(Padding::all(15).y(19).right(60))
-        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
-        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-        .s(Borders::all_signal(focus_signal.map_bool(
-            || Border::new().color(hsluv!(0, 0, 63.2)),
-            || Border::new().color(hsluv!(0, 0, 91.03)),
-        )))
-        .s(Shadows::new([Shadow::new()
-            .inner()
-            .y(-2)
-            .blur(1)
-            .color(hsluv!(0, 0, 0, 3))]))
-        .s(Font::new().color(hsluv!(0, 0, 32.7)))
-        .on_focused_change(move |f| focus.set_neq(f))
-        .label_hidden("playlist name")
+    Input::new()
+        // .s(Padding::all(15).y(19).right(60))
+        // .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
+        // .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
+        // .s(Borders::all_signal(focus_signal.map_bool(
+        //     || Border::new().color(hsluv!(0, 0, 63.2)),
+        //     || Border::new().color(hsluv!(0, 0, 91.03)),
+        // )))
+        // .s(Shadows::new([Shadow::new()
+        //     .inner()
+        //     .y(-2)
+        //     .blur(1)
+        //     .color(hsluv!(0, 0, 0, 3))]))
+        // .s(Font::new().color(hsluv!(0, 0, 32.7)))
+        // .label_hidden("playlist name")
+        .s(Align::new().top())
+        .s(AlignContent::new().top())
         .on_blur(super::store_playlist_name)
         .on_change(move |text| super::playlist_name().set_neq(text))
         .on_key_down_event(|event| match event.key() {
@@ -205,7 +208,7 @@ fn playlist_name_input() -> impl Element {
             Key::Enter => super::store_playlist_name(),
             _ => (),
         })
-        .text_signal(text_signal)
+        .value_signal(text_signal)
 }
 
 fn track(track: Arc<Track>) -> impl Element {
@@ -304,8 +307,3 @@ fn footer() -> impl Element {
                 .content(author_link()),
         )
 }
-
-// ------ Search ------
-// fn search_results() -> impl Element {
-
-// }

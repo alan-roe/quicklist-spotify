@@ -25,6 +25,10 @@ async fn frontend() -> Frontend {
             <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/input.min.js"></script>
             <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/search.min.js"></script>
             <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/button.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/tile.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/dotcom-shell.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/content-block-card-static.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/tag.min.js"></script>
             "#,    
         )
 }
