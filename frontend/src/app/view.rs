@@ -1,4 +1,5 @@
 use super::*;
+use crate::elements::Search;
 
 pub fn root() -> impl Element {
     Column::new()
@@ -49,7 +50,6 @@ fn panels() -> impl Element {
 
 fn search_results_panel() -> impl Element {
     let (focus, focus_signal) = Mutable::new_and_signal(false);
-
     Column::with_tag(Tag::Section)
         .s(Shadows::new([
             Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
@@ -89,31 +89,19 @@ fn search_results(input_focus: Mutable<bool>) -> impl Element {
 }
 
 fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {
-    TextInput::new()
-        .s(Padding::all(15).y(19).right(60))
-        .s(Font::new().size(24).color(hsluv!(0, 0, 32.7)))
-        .s(Background::new().color(hsluv!(0, 0, 0, 0.3)))
-        .s(Shadows::new([Shadow::new()
-            .inner()
-            .y(-2)
-            .blur(1)
-            .color(hsluv!(0, 0, 0, 3))]))
+    Search::new()
         .focus_signal(focus)
         .on_focus(super::start_search_timer)
         .on_change(|new_query| {
             super::set_new_query(new_query);
             super::start_search_timer();
         })
-        .label_hidden("Start typing a song title/artist")
-        .placeholder(
-            Placeholder::new("Start typing a song title/artist")
-                .s(Font::new().italic().color(hsluv!(0, 0, 60.3))),
-        )
+        .placeholder("Start typing a song title/artist")
         .on_key_down_event(|event| {
             event.if_key(Key::Enter, || super::add_track(None));
             event.if_key(Key::Other(" ".to_string()), super::search);
         })
-        .text_signal(super::new_query().signal_cloned())
+        .value_signal(super::new_query().signal_cloned())
 }
 
 fn search_info(track: Arc<Track>) -> impl Element {

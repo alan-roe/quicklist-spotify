@@ -14,15 +14,18 @@ async fn frontend() -> Frontend {
         .title("QuickList for Spotify")
         .append_to_head(include_str!("../favicon.html")) // realfavicongenerator.net
         .append_to_head(
-            "
-        <link rel=\"preconnect\" href=\"https://rsms.me/\">
-        <link rel=\"stylesheet\" href=\"https://rsms.me/inter/inter.css\">
-        <style>
-            :root { font-family: 'Inter', sans-serif; }
-            @supports (font-variation-settings: normal) {
-             :root { font-family: 'Inter var', sans-serif; }
-            }
-        </style>",
+            r#"<link rel="preconnect" href="https://rsms.me/">
+            <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+            <style>
+                :root { font-family: 'Inter', sans-serif; }
+                @supports (font-variation-settings: normal) {
+                 :root { font-family: 'Inter var', sans-serif; }
+                }
+            </style>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/input.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/search.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/button.min.js"></script>
+            "#,    
         )
 }
 
