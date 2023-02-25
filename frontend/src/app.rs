@@ -189,6 +189,8 @@ fn store_local<T: Serialize + ?Sized>(key: &str, val: &T) {
     let key = STORAGE_KEY.to_owned() + "-" + key;
     if let Err(e) = local_storage().insert(&key, val) {
         eprintln!("Saving {key} to local storage failed: {e}");
+    } else {
+        println!("Saved {key} to local storage");
     }
 }
 

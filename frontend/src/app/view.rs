@@ -1,30 +1,38 @@
+use zoon::println;
+
 use super::*;
-use crate::elements::{Search, Input};
+use crate::elements::{Input, Search, Tile};
 
 pub fn root() -> impl Element {
-    Column::new()
-        .s(Width::fill())
-        .s(Height::fill().min_screen())
-        .s(Font::new()
-            .size(14)
-            .color(hsluv!(0, 0, 5.1))
-            .weight(FontWeight::Light)
-            .family([FontFamily::new("Inter"), FontFamily::SansSerif]))
-        .s(Background::new().color(hsluv!(0, 0, 96.5)))
-        .item(content())
+    RawHtmlEl::new("div")
+        .class("bx--grid")
+        //Column::new()
+        // .s(Width::fill())
+        // .s(Height::fill().min_screen())
+        // .s(Font::new()
+        //     .size(14)
+        //     .color(hsluv!(0, 0, 5.1))
+        //     .weight(FontWeight::Light)
+        //     .family([FontFamily::new("Inter"), FontFamily::SansSerif]))
+        // .s(Background::new().color(hsluv!(0, 0, 96.5)))
+        .child(content())
 }
 
 fn content() -> impl Element {
-    Column::new()
-        .s(Width::fill().min(230).max(1024))
-        .s(Align::new().center_x())
-        .item(header())
-        .item(
-            Column::new()
-                .s(Width::fill())
-                .s(Gap::both(65))
-                .item(panels())
-                .item(footer()),
+    RawHtmlEl::new("div")
+        .class("bx--col")
+        // Column::new()
+        //     .s(Width::fill().min(230).max(1024))
+        //     .s(Align::new().center_x())
+        .child(header())
+        .child(
+            RawHtmlEl::new("div")
+                .class("bx--col")
+                // Column::new()
+                // .s(Width::fill())
+                // .s(Gap::both(65))
+                .child(panels())
+                .child(footer()),
         )
 }
 
@@ -41,55 +49,68 @@ fn header() -> impl Element {
 }
 
 fn panels() -> impl Element {
-    Row::new()
-        .item(search_results_panel())
-        .item(playlist_panel())
+    RawHtmlEl::new("div")
+        .class("bx--row")
+        .child(
+            RawHtmlEl::new("div")
+                .class("bx--col")
+                .child(search_results_panel()),
+        )
+        .child(
+            RawHtmlEl::new("div")
+                .class("bx--col")
+                .child(playlist_panel()),
+        )
+    //Row::new()
 }
 
 // ------ Search ------
 
 fn search_results_panel() -> impl Element {
     let (focus, focus_signal) = Mutable::new_and_signal(false);
-    Column::with_tag(Tag::Section)
-        .s(Shadows::new([
-            Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
-            Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
-        ]))
-        .s(Align::new().top())
-        .s(Width::fill())
-        .s(Background::new().color(hsluv!(0, 0, 100)))
-        .item(search_track(focus_signal))
-        .item_signal(super::results_exist().map_true(move || search_results(focus.clone())))
+    RawHtmlEl::new("div")
+        .class("bx--col")
+        //Column::with_tag(Tag::Section)
+        // .s(Shadows::new([
+        //     Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
+        //     Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
+        // ]))
+        // .s(Align::new().top())
+        // .s(Width::fill())
+        // .s(Background::new().color(hsluv!(0, 0, 100)))
+        .child(search_track(focus_signal))
+        .child_signal(super::results_exist().map_true(move || search_results(focus.clone())))
 }
 
 fn search_result(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
-    Row::new()
-        .s(Width::fill())
-        .s(Background::new().color(hsluv!(0, 0, 100)))
-        .s(Gap::both(5))
-        .s(Font::new().size(24))
-        .item(search_info(track.clone()))
-        .id(&track.track_id)
-        .on_click(move || {
-            add_track(Some(&track));
-            input_focus.set(true);
-        })
+    RawHtmlEl::new("div")
+        .class("bx--row")
+        // Row::new()
+        //     .s(Width::fill())
+        //     .s(Background::new().color(hsluv!(0, 0, 100)))
+        //     .s(Gap::both(5))
+        //     .s(Font::new().size(24))
+        .child(search_info(track, input_focus))
+    //.id(&track.track_id)
 }
 
 fn search_results(input_focus: Mutable<bool>) -> impl Element {
-    Column::new()
-        .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
-        .s(Background::new().color(hsluv!(0, 0, 93.7)))
-        .s(Gap::both(1))
-        .items_signal_vec(
+    RawHtmlEl::new("div")
+        .class("bx--col")
+        // Column::new()
+        //     .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
+        //     .s(Background::new().color(hsluv!(0, 0, 93.7)))
+        //     .s(Gap::both(1))
+        .children_signal_vec(
             super::search_results()
                 .signal_vec_cloned()
                 .map(move |track| search_result(track, input_focus.clone())),
         )
 }
 
-fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {    
+fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Element {
     Search::new()
+        .focus(true)
         .focus_signal(focus)
         .on_focus(super::start_search_timer)
         .on_change(|new_query| {
@@ -104,47 +125,69 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
         .value_signal(super::new_query().signal_cloned())
 }
 
-fn search_info(track: Arc<Track>) -> impl Element {
+fn search_info(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
+    // Tile::new()
+    // .s(Width::fill())
+    // .s(Font::new().color(hsluv!(0, 0, 32.7)).size(24))
+    // .s(Padding::all(15).right(60))
+    // .s(Clip::x())
+    //.for_input(track.track_id.clone())
+
+    // .child(track.format.clone())
+
     Label::new()
         .s(Width::fill())
         .s(Font::new().color(hsluv!(0, 0, 32.7)).size(24))
         .s(Padding::all(15).right(60))
         .s(Clip::x())
-        .for_input(track.track_id.clone())
         .label(track.format.clone())
+        .on_click(move || {
+            add_track(Some(&track));
+            input_focus.set(true);
+        })
 }
 
 // ------ Playlist ------
 
-fn playlist_panel() -> impl Element {    
-    Column::with_tag(Tag::Section)
+fn playlist_panel() -> impl Element {
+    RawHtmlEl::new("div")
+        .class("bx--col")
+        // Column::with_tag(Tag::Section)
         // .s(Shadows::new([
         //     Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
         //     Shadow::new().y(25).blur(50).color(hsluv!(0, 0, 0, 10)),
         // ]))
         // .s(Width::fill())
         // .s(Background::new().color(hsluv!(0, 0, 100)))
-        .s(Align::new().top())
-        .s(AlignContent::new().top())
-    
-        .item(playlist_name())
-        .item_signal(super::tracks_exist().map_true(tracks))
-        .item_signal(super::tracks_exist().map_true(panel_footer))
+        // .s(Align::new().top())
+        // .s(AlignContent::new().top())
+        .child(playlist_name())
+        .child_signal(super::tracks_exist().map_true(tracks))
+        .child_signal(super::tracks_exist().map_true(panel_footer))
 }
 
 fn playlist_name() -> impl Element {
-    Row::new()
-    //  .s(Padding::new().right(5))
-    //  .s(Gap::both(5))
-    .s(Align::new().top())
-    .s(AlignContent::new().top())
-    .item(playlist_name_input())
-    .item_signal(super::auth_token_expired().map_bool(|| login_button().left_either(), || login_button().right_either()))
-    
+    RawHtmlEl::new("div")
+        .class("bx--row")
+        //Row::new()
+        //  .s(Padding::new().right(5))
+        //  .s(Gap::both(5))
+        // .s(Align::new().top())
+        // .s(AlignContent::new().top())
+        .child(
+            RawHtmlEl::new("div")
+                .class("bx--col")
+                .child(playlist_name_input()),
+        )
+        .child(RawHtmlEl::new("div").class("bx--col").child_signal(
+            super::auth_token_expired().map_bool(
+                || login_button().left_either(),
+                || playlist_create_button().right_either(),
+            ),
+        ))
 }
 
-fn playlist_create_button(
-) -> impl Element {
+fn playlist_create_button() -> impl Element {
     crate::elements::Button::new()
         // .s(Background::new().color_signal(
         //     hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
@@ -166,8 +209,7 @@ fn playlist_create_button(
         )
 }
 
-fn login_button(
-) -> impl Element {
+fn login_button() -> impl Element {
     crate::elements::Button::new()
         // .s(Background::new().color_signal(
         //     hovered_signal.map_bool(|| hsluv!(125, 100, 60), || hsluv!(125, 100, 50)),
@@ -177,7 +219,7 @@ fn login_button(
         //     .weight(FontWeight::Bold))
         // .s(Padding::new().x(20).y(10))
         // .s(RoundedCorners::all(4))
-        .size("sm")
+        // .size("sm")
         .on_press(super::login)
         .label("Log in")
 }
@@ -199,10 +241,15 @@ fn playlist_name_input() -> impl Element {
         //     .color(hsluv!(0, 0, 0, 3))]))
         // .s(Font::new().color(hsluv!(0, 0, 32.7)))
         // .label_hidden("playlist name")
+        .placeholder("Playlist Name")
         .s(Align::new().top())
         .s(AlignContent::new().top())
-        .on_blur(super::store_playlist_name)
-        .on_change(move |text| super::playlist_name().set_neq(text))
+        .on_blur(|| {
+            super::store_playlist_name()
+        })
+        .on_change(move |text| {
+            super::playlist_name().set_neq(text)
+        })
         .on_key_down_event(|event| match event.key() {
             Key::Escape => super::reload_playlist_name(),
             Key::Enter => super::store_playlist_name(),

@@ -14,22 +14,25 @@ async fn frontend() -> Frontend {
         .title("QuickList for Spotify")
         .append_to_head(include_str!("../favicon.html")) // realfavicongenerator.net
         .append_to_head(
-            r#"<link rel="preconnect" href="https://rsms.me/">
-            <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
-            <style>
-                :root { font-family: 'Inter', sans-serif; }
-                @supports (font-variation-settings: normal) {
-                 :root { font-family: 'Inter var', sans-serif; }
+            r#"
+            <link
+                rel="stylesheet"
+                href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/plex.css" />
+            <style type="text/css">
+                body {
+                    font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+                    margin: 0;
                 }
             </style>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/input.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/search.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/button.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/tag/latest/tile.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/dotcom-shell.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/content-block-card-static.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/tag/v1/latest/tag.min.js"></script>
-            "#,    
+            <link rel="stylesheet" href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/grid.css" />
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/form.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/search.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/input.min.js"></script>            
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/button.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tile.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/ui-shell.min.js"></script>            
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tag.min.js"></script>
+            "#,
         )
 }
 
