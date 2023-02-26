@@ -22,6 +22,16 @@ impl<RE: RawEl> Search<RE> {
         self
     }
 
+    pub fn size(mut self, size: &str) -> Self where <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue> {
+        self.raw_el = self.raw_el.prop("size", size);
+        self
+    }
+
+    pub fn label(mut self, label: &str) -> Self where <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue> {
+        self.raw_el = self.raw_el.prop("labelText", label);
+        self
+    }
+
     pub fn value_signal(
         mut self,
         value: impl Signal<Item = impl IntoCowStr<'static>> + Unpin + 'static,

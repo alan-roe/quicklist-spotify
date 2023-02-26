@@ -1,11 +1,11 @@
 use zoon::println;
 
 use super::*;
-use crate::elements::{Input, Search, Tile};
+use crate::elements::{Input, Search, Tile, Grid, Row, Column};
 
 pub fn root() -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--grid")
+    RawHtmlEl::new("div").class("bleed").child(
+    Grid::new()
         //Column::new()
         // .s(Width::fill())
         // .s(Height::fill().min_screen())
@@ -15,25 +15,22 @@ pub fn root() -> impl Element {
         //     .weight(FontWeight::Light)
         //     .family([FontFamily::new("Inter"), FontFamily::SansSerif]))
         // .s(Background::new().color(hsluv!(0, 0, 96.5)))
-        .child(content())
-}
-
-fn content() -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--col")
+        .child(Row::new()
         // Column::new()
         //     .s(Width::fill().min(230).max(1024))
         //     .s(Align::new().center_x())
-        .child(header())
-        .child(
-            RawHtmlEl::new("div")
-                .class("bx--col")
+        .child(header()))
+        .child(content())
+        .child(footer()))
+}
+
+fn content() -> impl Element {
+    Row::new()
                 // Column::new()
                 // .s(Width::fill())
                 // .s(Gap::both(65))
                 .child(panels())
-                .child(footer()),
-        )
+        
 }
 
 fn header() -> impl Element {
@@ -49,18 +46,17 @@ fn header() -> impl Element {
 }
 
 fn panels() -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--row")
+    Column::new()
         .child(
             RawHtmlEl::new("div")
-                .class("bx--col")
+                .class("bx--row")
                 .child(search_results_panel()),
-        )
-        .child(
+        ).child(
             RawHtmlEl::new("div")
-                .class("bx--col")
+                .class("bx--row")
                 .child(playlist_panel()),
         )
+        
     //Row::new()
 }
 
@@ -68,8 +64,7 @@ fn panels() -> impl Element {
 
 fn search_results_panel() -> impl Element {
     let (focus, focus_signal) = Mutable::new_and_signal(false);
-    RawHtmlEl::new("div")
-        .class("bx--col")
+    Column::new()
         //Column::with_tag(Tag::Section)
         // .s(Shadows::new([
         //     Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
@@ -83,8 +78,7 @@ fn search_results_panel() -> impl Element {
 }
 
 fn search_result(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--row")
+    Row::new()
         // Row::new()
         //     .s(Width::fill())
         //     .s(Background::new().color(hsluv!(0, 0, 100)))
@@ -95,8 +89,7 @@ fn search_result(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element 
 }
 
 fn search_results(input_focus: Mutable<bool>) -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--col")
+    Column::new()
         // Column::new()
         //     .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         //     .s(Background::new().color(hsluv!(0, 0, 93.7)))
@@ -118,11 +111,13 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
             super::start_search_timer();
         })
         .placeholder("Start typing a song title/artist")
+        .label("Search for track")
         .on_key_down_event(|event| {
             event.if_key(Key::Enter, || super::add_track(None));
             event.if_key(Key::Other(" ".to_string()), super::search);
         })
         .value_signal(super::new_query().signal_cloned())
+        .size("lg")
 }
 
 fn search_info(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
@@ -150,8 +145,7 @@ fn search_info(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
 // ------ Playlist ------
 
 fn playlist_panel() -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--col")
+    Column::new()
         // Column::with_tag(Tag::Section)
         // .s(Shadows::new([
         //     Shadow::new().y(2).blur(4).color(hsluv!(0, 0, 0, 20)),
@@ -163,12 +157,11 @@ fn playlist_panel() -> impl Element {
         // .s(AlignContent::new().top())
         .child(playlist_name())
         .child_signal(super::tracks_exist().map_true(tracks))
-        .child_signal(super::tracks_exist().map_true(panel_footer))
+        .child(Row::new().child_signal(super::tracks_exist().map_true(panel_footer)))
 }
 
 fn playlist_name() -> impl Element {
-    RawHtmlEl::new("div")
-        .class("bx--row")
+    Row::new()
         //Row::new()
         //  .s(Padding::new().right(5))
         //  .s(Gap::both(5))
@@ -184,7 +177,8 @@ fn playlist_name() -> impl Element {
                 || login_button().left_either(),
                 || playlist_create_button().right_either(),
             ),
-        ))
+        )        .style("align-self", "flex-end")
+    )
 }
 
 fn playlist_create_button() -> impl Element {
@@ -244,6 +238,8 @@ fn playlist_name_input() -> impl Element {
         .placeholder("Playlist Name")
         .s(Align::new().top())
         .s(AlignContent::new().top())
+        .size("md")
+        .label("Playlist Name")
         .update_raw_el(|x| x.style("white-space", "normal"))
         .on_blur(|| {
             super::store_playlist_name()
@@ -260,7 +256,7 @@ fn playlist_name_input() -> impl Element {
 }
 
 fn track(track: Arc<Track>) -> impl Element {
-    Row::new()
+    zoon::Row::new()
         .s(Width::fill())
         .s(Background::new().color(hsluv!(0, 0, 100)))
         .s(Gap::both(5))
@@ -269,7 +265,7 @@ fn track(track: Arc<Track>) -> impl Element {
 }
 
 fn tracks() -> impl Element {
-    Column::new()
+    zoon::Column::new()
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
         .s(Background::new().color(hsluv!(0, 0, 93.7)))
         .s(Gap::both(1))
@@ -306,7 +302,7 @@ fn remove_track_button(todo: &Track) -> impl Element {
 
 fn panel_footer() -> impl Element {
     let item_container = || El::new().s(Width::fill());
-    Row::with_tag(Tag::Footer)
+    zoon::Row::with_tag(Tag::Footer)
         .s(Padding::new().x(15).y(8))
         .s(Font::new().color(hsluv!(0, 0, 50)))
         .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
@@ -346,7 +342,7 @@ fn author_link() -> impl Element {
 }
 
 fn footer() -> impl Element {
-    Column::with_tag(Tag::Footer)
+    zoon::Row::with_tag(Tag::Footer)
         .s(Gap::both(9))
         .s(Font::new().size(10).color(hsluv!(0, 0, 77.3)).center())
         .item(
