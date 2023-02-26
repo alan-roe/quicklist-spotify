@@ -47,10 +47,7 @@ impl<RE: RawEl> Styleable<'_> for Tile<RE> {}
 
 impl<RE: RawEl> MouseEventAware for Tile<RE> {}
 
-impl<RE: RawEl> AddNearbyElement<'_>
-    for Tile<RE>
-{
-}
+impl<RE: RawEl> AddNearbyElement<'_> for Tile<RE> {}
 
 impl<RE: RawEl> UpdateRawEl for Tile<RE> {
     type RawEl = RE;

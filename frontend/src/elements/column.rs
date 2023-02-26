@@ -9,7 +9,7 @@ pub struct Column<RE: RawEl> {
 impl Column<RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").class("bx--col")
+            raw_el: RawHtmlEl::new("div").class("bx--col"),
         }
     }
 
@@ -48,8 +48,7 @@ impl<RE: RawEl> Styleable<'_> for Column<RE> {}
 impl ChoosableTag for Column<RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         Self {
-            raw_el: RawHtmlEl::new(tag.as_str())
-                .class("bx--col")
+            raw_el: RawHtmlEl::new(tag.as_str()).class("bx--col"),
         }
     }
 }

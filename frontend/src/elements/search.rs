@@ -10,7 +10,7 @@ pub struct Search<RE: RawEl> {
 impl Search<RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::<web_sys::HtmlElement>::new("bx-search")
+            raw_el: RawHtmlEl::<web_sys::HtmlElement>::new("bx-search"),
         }
     }
 }
@@ -22,12 +22,18 @@ impl<RE: RawEl> Search<RE> {
         self
     }
 
-    pub fn size(mut self, size: &str) -> Self where <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue> {
+    pub fn size(mut self, size: &str) -> Self
+    where
+        <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue>,
+    {
         self.raw_el = self.raw_el.prop("size", size);
         self
     }
 
-    pub fn label(mut self, label: &str) -> Self where <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue> {
+    pub fn label(mut self, label: &str) -> Self
+    where
+        <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue>,
+    {
         self.raw_el = self.raw_el.prop("labelText", label);
         self
     }
@@ -35,7 +41,10 @@ impl<RE: RawEl> Search<RE> {
     pub fn value_signal(
         mut self,
         value: impl Signal<Item = impl IntoCowStr<'static>> + Unpin + 'static,
-    ) -> Self where <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue>{
+    ) -> Self
+    where
+        <RE as zoon::RawEl>::DomElement: std::convert::AsRef<zoon::JsValue>,
+    {
         self.raw_el = self.raw_el.prop_signal("value", value);
         self
     }
@@ -53,7 +62,7 @@ impl<RE: RawEl> Search<RE> {
 
     fn into_type(self) -> Search<RE> {
         Search {
-            raw_el: self.raw_el
+            raw_el: self.raw_el,
         }
     }
 }

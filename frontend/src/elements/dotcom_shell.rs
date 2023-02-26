@@ -9,7 +9,7 @@ pub struct DotcomShell<RE: RawEl> {
 impl DotcomShell<RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("dds-content-item")//.prop("has-profile", "{false}").prop("has-search", "{false}"),
+            raw_el: RawHtmlEl::new("dds-content-item"), //.prop("has-profile", "{false}").prop("has-search", "{false}"),
         }
     }
 

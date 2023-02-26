@@ -1,4 +1,4 @@
-use std::{iter, rc::Rc, cell::RefCell, marker::PhantomData};
+use std::{cell::RefCell, iter, marker::PhantomData, rc::Rc};
 use zoon::*;
 
 make_event!(BxBtn, "bx-btn" => web_sys::CustomEvent);
@@ -14,7 +14,7 @@ impl Button<OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
             raw_el: RawHtmlEl::new("bx-btn"),
-            flags: PhantomData
+            flags: PhantomData,
         }
     }
 
@@ -33,11 +33,7 @@ impl Button<OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
 }
 
 impl<'a, OnPressFlag, RE: RawEl> Button<OnPressFlag, RE> {
-    pub fn label(
-        mut self,
-        label: impl IntoElement<'a> + 'a,
-    ) -> Button<OnPressFlag, RE>
-    {
+    pub fn label(mut self, label: impl IntoElement<'a> + 'a) -> Button<OnPressFlag, RE> {
         self.raw_el = self.raw_el.child(label);
         self.into_type()
     }
@@ -45,8 +41,7 @@ impl<'a, OnPressFlag, RE: RawEl> Button<OnPressFlag, RE> {
     pub fn label_signal(
         mut self,
         label: impl Signal<Item = impl IntoElement<'a>> + Unpin + 'static,
-    ) -> Button<OnPressFlag, RE>
-    {
+    ) -> Button<OnPressFlag, RE> {
         self.raw_el = self.raw_el.child_signal(label);
         self.into_type()
     }
@@ -85,7 +80,6 @@ impl<OnPressFlag, RE: RawEl> UpdateRawEl for Button<OnPressFlag, RE> {
 }
 
 impl<OnPressFlag, RE: RawEl> Styleable<'_> for Button<OnPressFlag, RE> {}
-
 
 impl<OnPressFlag, RE: RawEl + Into<RawElement>> Element for Button<OnPressFlag, RE> {
     fn into_raw_element(self) -> RawElement {

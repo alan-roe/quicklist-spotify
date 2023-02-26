@@ -9,7 +9,7 @@ pub struct Row<RE: RawEl> {
 impl Row<RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").class("bx--row")
+            raw_el: RawHtmlEl::new("div").class("bx--row"),
         }
     }
 
@@ -46,8 +46,7 @@ impl Row<RawHtmlEl<web_sys::HtmlElement>> {
 impl ChoosableTag for Row<RawHtmlEl<web_sys::HtmlElement>> {
     fn with_tag(tag: Tag) -> Self {
         Self {
-            raw_el: RawHtmlEl::new(tag.as_str())
-                .class("bx--row")
+            raw_el: RawHtmlEl::new(tag.as_str()).class("bx--row"),
         }
     }
 }

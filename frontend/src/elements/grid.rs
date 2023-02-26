@@ -9,7 +9,7 @@ pub struct Grid<RE: RawEl> {
 impl Grid<RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("div").class("bx--grid")
+            raw_el: RawHtmlEl::new("div").class("bx--grid"),
         }
     }
 
