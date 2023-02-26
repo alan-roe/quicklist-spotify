@@ -45,6 +45,13 @@ impl Tile<RawHtmlEl<web_sys::HtmlElement>> {
 
 impl<RE: RawEl> Styleable<'_> for Tile<RE> {}
 
+impl<RE: RawEl> MouseEventAware for Tile<RE> {}
+
+impl<RE: RawEl> AddNearbyElement<'_>
+    for Tile<RE>
+{
+}
+
 impl<RE: RawEl> UpdateRawEl for Tile<RE> {
     type RawEl = RE;
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {

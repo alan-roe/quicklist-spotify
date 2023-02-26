@@ -43,6 +43,15 @@ impl Row<RawHtmlEl<web_sys::HtmlElement>> {
     }
 }
 
+impl ChoosableTag for Row<RawHtmlEl<web_sys::HtmlElement>> {
+    fn with_tag(tag: Tag) -> Self {
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str())
+                .class("bx--row")
+        }
+    }
+}
+
 impl<RE: RawEl> Styleable<'_> for Row<RE> {}
 
 impl<RE: RawEl> UpdateRawEl for Row<RE> {

@@ -45,6 +45,15 @@ impl Column<RawHtmlEl<web_sys::HtmlElement>> {
 
 impl<RE: RawEl> Styleable<'_> for Column<RE> {}
 
+impl ChoosableTag for Column<RawHtmlEl<web_sys::HtmlElement>> {
+    fn with_tag(tag: Tag) -> Self {
+        Self {
+            raw_el: RawHtmlEl::new(tag.as_str())
+                .class("bx--col")
+        }
+    }
+}
+
 impl<RE: RawEl> UpdateRawEl for Column<RE> {
     type RawEl = RE;
     fn update_raw_el(mut self, updater: impl FnOnce(Self::RawEl) -> Self::RawEl) -> Self {
