@@ -244,6 +244,7 @@ fn playlist_name_input() -> impl Element {
         .placeholder("Playlist Name")
         .s(Align::new().top())
         .s(AlignContent::new().top())
+        .update_raw_el(|x| x.style("white-space", "normal"))
         .on_blur(|| {
             super::store_playlist_name()
         })
