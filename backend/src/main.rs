@@ -1,6 +1,6 @@
-use once_cell::sync::OnceCell;
 use async_recursion::async_recursion;
 use moon::*;
+use once_cell::sync::OnceCell;
 use rspotify::{self, prelude::BaseClient, ClientCredsSpotify, Credentials, Token};
 use shared::{
     rspotify::{prelude::OAuthClient, scopes, AuthCodeSpotify, OAuth},
@@ -14,15 +14,25 @@ async fn frontend() -> Frontend {
         .title("QuickList for Spotify")
         .append_to_head(include_str!("../favicon.html")) // realfavicongenerator.net
         .append_to_head(
-            "
-        <link rel=\"preconnect\" href=\"https://rsms.me/\">
-        <link rel=\"stylesheet\" href=\"https://rsms.me/inter/inter.css\">
-        <style>
-            :root { font-family: 'Inter', sans-serif; }
-            @supports (font-variation-settings: normal) {
-             :root { font-family: 'Inter var', sans-serif; }
-            }
-        </style>",
+            r#"
+            <link
+                rel="stylesheet"
+                href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/plex.css" />
+            <style type="text/css">
+                body {
+                    font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+                    margin: 0;
+                }
+            </style>
+            <link rel="stylesheet" href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/grid.css" />
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/form.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/search.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/input.min.js"></script>            
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/button.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tile.min.js"></script>
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/ui-shell.min.js"></script>            
+            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tag.min.js"></script>
+            "#,
         )
 }
 
@@ -132,17 +142,17 @@ async fn main() -> std::io::Result<()> {
         secret: Some(env::var("CLIENT_SECRET").unwrap()),
     };
 
-    let client = async {  
+    let client = async {
         println!("Creds\nid: {}\nsecret: {:?}", &creds.id, &creds.secret);
 
         let client = ClientCredsSpotify::new(creds.clone());
         client.request_token().await.unwrap();
         client
-    }.await;
+    }
+    .await;
 
     CREDS.set(creds).unwrap();
-    CLIENT
-        .set(client).unwrap();
+    CLIENT.set(client).unwrap();
 
     REDIRECT_URI.set(env::var("REDIRECT_URI").unwrap()).unwrap();
 
