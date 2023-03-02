@@ -13,6 +13,11 @@ impl Grid<RawHtmlEl<web_sys::HtmlElement>> {
         }
     }
 
+    pub fn style(mut self, name: &str, value: &str) -> Self {
+        self.raw_el = self.raw_el.style(name, value);
+        self
+    }
+
     pub fn child<'a>(mut self, child: impl IntoOptionElement<'a> + 'a) -> Self {
         self.raw_el = self.raw_el.child(child);
         self

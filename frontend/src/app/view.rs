@@ -1,22 +1,19 @@
 use super::*;
-use crate::elements::{Column, Grid, Input, Row, Search, Tile};
+use crate::elements::{Button, Column, Grid, Input, Row, Search, Tile};
 
 pub fn root() -> impl Element {
     Grid::new()
+        .style("max-width", "30rem")
+        .style("min-width", "30rem")
         .child(Row::new().child(header()))
-        .child(content())
+        .child(Row::new().child(panels()))
         .child(footer())
-}
-
-fn content() -> impl Element {
-    Row::new().child(panels())
 }
 
 fn header() -> impl Element {
     El::with_tag(Tag::Header)
         .s(Padding::new().y(10))
         .s(Align::new().center_x())
-        //.s(Height::exact(130))
         .s(Font::new()
             .size(48)
             .color(named_color::GREEN_7)
@@ -26,16 +23,8 @@ fn header() -> impl Element {
 
 fn panels() -> impl Element {
     Column::new()
-        .child(
-            RawHtmlEl::new("div")
-                .class("bx--row")
-                .child(search_results_panel()),
-        )
-        .child(
-            RawHtmlEl::new("div")
-                .class("bx--row")
-                .child(playlist_panel()),
-        )
+        .child(Row::new().child(search_results_panel()))
+        .child(Row::new().child(playlist_panel()))
 }
 
 // ------ Search ------
@@ -113,7 +102,7 @@ fn playlist_name() -> impl Element {
 }
 
 fn playlist_create_button() -> impl Element {
-    crate::elements::Button::new()
+    Button::new()
         .on_press(|| {
             if !super::playlist_created().get() {
                 super::create_playlist();
@@ -127,7 +116,7 @@ fn playlist_create_button() -> impl Element {
 }
 
 fn login_button() -> impl Element {
-    crate::elements::Button::new()
+    Button::new()
         .size("md")
         .on_press(super::login)
         .label("Log in")
@@ -153,20 +142,16 @@ fn playlist_name_input() -> impl Element {
 }
 
 fn track(track: Arc<Track>) -> impl Element {
-    zoon::Row::new()
+    Row::new()
         .s(Width::fill())
-        //.s(Background::new().color(hsluv!(0, 0, 100)))
         .s(Gap::both(5))
-        //.s(Font::new().size(24))
-        .item(track_info(track))
+        .child(track_info(track))
 }
 
 fn tracks() -> impl Element {
-    zoon::Column::new()
-        // .s(Borders::new().top(Border::new().color(hsluv!(0, 0, 91.3))))
-        // .s(Background::new().color(hsluv!(0, 0, 93.7)))
+    Column::new()
         .s(Gap::both(1))
-        .items_signal_vec(super::tracks().signal_vec_cloned().map(track))
+        .children_signal_vec(super::tracks().signal_vec_cloned().map(track))
 }
 
 fn track_info(track: Arc<Track>) -> impl Element {
@@ -182,7 +167,7 @@ fn track_info(track: Arc<Track>) -> impl Element {
 fn remove_track_button(todo: &Track) -> impl Element {
     let (hovered, hovered_signal) = Mutable::new_and_signal(false);
     let id = todo.track_id.clone();
-    Button::new()
+    zoon::Button::new()
         .s(Width::exact(40))
         .s(Height::exact(40))
         .s(Transform::new().move_left(50).move_down(14))
