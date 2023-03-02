@@ -39,7 +39,7 @@ fn current_track() -> &'static Mutable<Track> {
         track_id: "".to_owned(),
         title: "".to_owned(),
         artist: "".to_owned(),
-        duration_ms: 0,
+        duration_sec: 0,
     })
 }
 
@@ -83,18 +83,18 @@ fn playlist_duration() -> &'static Mutable<i64> {
         tracks()
             .lock_ref()
             .iter()
-            .map(|x| x.duration_ms)
+            .map(|x| x.duration_sec)
             .reduce(|x, acc| x + acc)
-            .unwrap(),
+            .unwrap_or_default(),
     )
 }
 
 fn playlist_duration_format() -> String {
-    let ms = playlist_duration().get();
-    let hour = format!("{} hr", ms / 1000 / 60 / 60 % 60);
-    let min = format!("{} min", ms / 1000 / 60 % 60);
-    let sec = format!("{} sec", ms / 1000 % 60);
-    let duration = if ms < 3_600_000 {
+    let secs = playlist_duration().get();
+    let hour = format!("{} hr", secs / 60 / 60 % 60);
+    let min = format!("{} min", secs / 60 % 60);
+    let sec = format!("{} sec", secs % 60);
+    let duration = if secs < 3_600 {
         // number of ms in hour
         (min, sec)
     } else {
@@ -315,7 +315,7 @@ fn add_track(track: Option<&Track>) {
                     .as_ref()
                     .clone()
             };
-            playlist_duration().update(|x| x + track.duration_ms);
+            playlist_duration().update(|x| x + track.duration_sec);
             tracks().lock_mut().push_cloned(Arc::new(track));
         }
         save_tracks();
@@ -361,7 +361,7 @@ fn search() {
                         track_id: track.id.unwrap().to_string(),
                         title: track.name.clone(),
                         artist: track.artists[0].name.clone(),
-                        duration_ms: track.duration.num_milliseconds(),
+                        duration_sec: track.duration.num_seconds(),
                     }));
                 }
             }
@@ -391,7 +391,7 @@ fn remove_track(id: &str) {
         if track.track_id.as_str() != id {
             true
         } else {
-            playlist_duration().update(|x| x - track.duration_ms);
+            playlist_duration().update(|x| x - track.duration_sec);
             false
         }
     });
