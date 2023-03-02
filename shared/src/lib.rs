@@ -44,4 +44,5 @@ pub struct Track {
     pub track_id: String,
     pub title: String,
     pub artist: String,
+    pub duration_ms: i64,
 }

@@ -202,10 +202,14 @@ fn panel_footer() -> impl Element {
 }
 
 fn track_count() -> impl Element {
-    Text::with_signal(
-        super::track_count()
-            .map(|count| format!("{} track{}", count, if count == 1 { "" } else { "s" })),
-    )
+    Text::with_signal(super::track_count().map(|count| {
+        format!(
+            "{} song{}, {}",
+            count,
+            if count == 1 { "" } else { "s" },
+            super::playlist_duration_format()
+        )
+    }))
 }
 
 fn author_link() -> impl Element {

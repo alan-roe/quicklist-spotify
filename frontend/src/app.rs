@@ -39,6 +39,7 @@ fn current_track() -> &'static Mutable<Track> {
         track_id: "".to_owned(),
         title: "".to_owned(),
         artist: "".to_owned(),
+        duration_ms: 0,
     })
 }
 
@@ -74,6 +75,32 @@ fn reload_playlist_name() {
 #[static_ref]
 fn username() -> &'static Mutable<String> {
     Mutable::new(String::new())
+}
+
+#[static_ref]
+fn playlist_duration() -> &'static Mutable<i64> {
+    Mutable::new(
+        tracks()
+            .lock_ref()
+            .iter()
+            .map(|x| x.duration_ms)
+            .reduce(|x, acc| x + acc)
+            .unwrap(),
+    )
+}
+
+fn playlist_duration_format() -> String {
+    let ms = playlist_duration().get();
+    let hour = format!("{} hr", ms / 1000 / 60 / 60 % 60);
+    let min = format!("{} min", ms / 1000 / 60 % 60);
+    let sec = format!("{} sec", ms / 1000 % 60);
+    let duration = if ms < 3_600_000 {
+        // number of ms in hour
+        (min, sec)
+    } else {
+        (hour, min)
+    };
+    format!("{} {}", duration.0, duration.1)
 }
 
 #[static_ref]
@@ -140,7 +167,7 @@ fn search_timer() -> &'static Mutable<Option<Timer>> {
 }
 
 fn start_search_timer() {
-    search_timer().set(Some(Timer::new(750, || {
+    search_timer().set(Some(Timer::new(500, || {
         search();
         stop_search_timer();
     })));
@@ -278,11 +305,18 @@ fn add_track(track: Option<&Track>) {
     let mut new_query = new_query().lock_mut();
     if !search_results().lock_ref().is_empty() {
         {
-            tracks().lock_mut().push_cloned(Arc::new(
-                track
-                    .unwrap_or(search_results().lock_ref().first().unwrap())
-                    .clone(),
-            ));
+            let track = if let Some(track) = track {
+                track.to_owned()
+            } else {
+                search_results()
+                    .lock_ref()
+                    .first()
+                    .unwrap()
+                    .as_ref()
+                    .clone()
+            };
+            playlist_duration().update(|x| x + track.duration_ms);
+            tracks().lock_mut().push_cloned(Arc::new(track));
         }
         save_tracks();
         search_results().lock_mut().clear();
@@ -327,6 +361,7 @@ fn search() {
                         track_id: track.id.unwrap().to_string(),
                         title: track.name.clone(),
                         artist: track.artists[0].name.clone(),
+                        duration_ms: track.duration.num_milliseconds(),
                     }));
                 }
             }
@@ -352,9 +387,14 @@ fn set_new_query(query: String) {
 }
 
 fn remove_track(id: &str) {
-    tracks()
-        .lock_mut()
-        .retain(|track| track.track_id.as_str() != id);
+    tracks().lock_mut().retain(|track| {
+        if track.track_id.as_str() != id {
+            true
+        } else {
+            playlist_duration().update(|x| x - track.duration_ms);
+            false
+        }
+    });
     save_tracks();
 }
 
