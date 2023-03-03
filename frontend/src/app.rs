@@ -78,6 +78,11 @@ fn username() -> &'static Mutable<String> {
 }
 
 #[static_ref]
+pub fn selected_track() -> &'static Mutable<String> {
+    Mutable::new(String::new())
+}
+
+#[static_ref]
 fn playlist_duration() -> &'static Mutable<i64> {
     Mutable::new(
         tracks()
@@ -310,7 +315,8 @@ fn add_track(track: Option<&Track>) {
             } else {
                 search_results()
                     .lock_ref()
-                    .first()
+                    .iter()
+                    .find(|x| x.track_id.eq(&selected_track().get_cloned()))
                     .unwrap()
                     .as_ref()
                     .clone()
@@ -322,6 +328,42 @@ fn add_track(track: Option<&Track>) {
         search_results().lock_mut().clear();
         new_query.clear();
     }
+}
+
+fn next_track() {
+    selected_track().update_mut(|x| {
+        let tracks_ref = search_results().lock_ref();
+        let mut tracks_iter = tracks_ref.iter();
+        while let Some(track) = tracks_iter.next() {
+            if track.track_id == *x {
+                if let Some(next) = tracks_iter.next() {
+                    *x = next.track_id.clone();
+                } else {
+                    let tracks = search_results().lock_ref();
+                    *x = tracks.first().unwrap().track_id.clone();
+                }
+                break;
+            }
+        }
+    });
+}
+
+fn prev_track() {
+    selected_track().update_mut(|x| {
+        let tracks_ref = search_results().lock_ref();
+        let mut tracks_iter = tracks_ref.iter().rev();
+        while let Some(track) = tracks_iter.next() {
+            if track.track_id == *x {
+                if let Some(next) = tracks_iter.next() {
+                    *x = next.track_id.clone();
+                } else {
+                    let tracks = search_results().lock_ref();
+                    *x = tracks.last().unwrap().track_id.clone();
+                }
+                break;
+            }
+        }
+    });
 }
 
 pub fn load_tracks() {
@@ -363,6 +405,9 @@ fn search() {
                         artist: track.artists[0].name.clone(),
                         duration_sec: track.duration.num_seconds(),
                     }));
+                }
+                if let Some(track) = results.first() {
+                    selected_track().set(track.track_id.clone());
                 }
             }
         }

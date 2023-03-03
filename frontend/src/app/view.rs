@@ -4,7 +4,7 @@ use crate::elements::{Button, Column, Grid, Input, Row, Search, Tile};
 pub fn root() -> impl Element {
     Grid::new()
         .style("max-width", "30rem")
-        .style("min-width", "30rem")
+        .style("width", "30rem")
         .child(Row::new().child(header()))
         .child(Row::new().child(panels()))
         .child(footer())
@@ -61,7 +61,9 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
         .label("Search for track")
         .on_key_down_event(|event| {
             event.if_key(Key::Enter, || super::add_track(None));
-            event.if_key(Key::Other(" ".to_string()), super::search);
+            event.if_key(Key::Other("ArrowDown".to_owned()), super::next_track);
+            event.if_key(Key::Other("ArrowUp".to_owned()), super::prev_track);
+            event.if_key(Key::Other(" ".to_owned()), super::search);
         })
         .value_signal(super::new_query().signal_cloned())
         .size("lg")
@@ -71,11 +73,27 @@ fn search_info(track: Arc<Track>, input_focus: Mutable<bool>) -> impl Element {
     Tile::new()
         .s(Width::fill())
         .s(Padding::all(15).right(60))
-        .child(track.format.clone())
-        .on_click(move || {
+        .s(
+            Background::new().color_signal(selected_track().signal_cloned().map(
+                clone!((track) move |x| {
+                    if x.eq(&track.track_id) {
+                        hsluv!(0, 0, 84.6)
+                    } else {
+                        hsluv!(0, 0, 96.2)
+                    }
+                }),
+            )),
+        )
+        .on_hovered_change(clone!((track) move |x| {
+        if x {
+            super::selected_track().set(track.track_id.clone());
+        }
+        }))
+        .on_click(clone!((track) move || {
             add_track(Some(&track));
             input_focus.set(true);
-        })
+        }))
+        .child(track.format.clone())
 }
 
 // ------ Playlist ------
