@@ -25,13 +25,10 @@ async fn frontend() -> Frontend {
                 }
             </style>
             <link rel="stylesheet" href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/grid.css" />
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/form.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/search.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/input.min.js"></script>            
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/button.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tile.min.js"></script>
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/ui-shell.min.js"></script>            
-            <script type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tag.min.js"></script>
+            <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/search.min.js"></script>
+            <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/input.min.js"></script>            
+            <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tile.min.js"></script>
+            <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/button.min.js"></script>
             "#,
         )
 }
