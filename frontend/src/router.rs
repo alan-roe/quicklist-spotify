@@ -12,6 +12,7 @@ pub fn router() -> &'static Router<Route> {
             println!("{}", &url);
             app::response_url().set(url);
             app::authorize_client();
+            return router().replace("/")
         }
     })
 }
