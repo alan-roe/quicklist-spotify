@@ -1,5 +1,5 @@
 use crate::app;
-use zoon::{println, *};
+use zoon::*;
 
 // ------ router ------
 
@@ -8,11 +8,11 @@ pub fn router() -> &'static Router<Route> {
     Router::new(|_: Option<Route>| async {
         let url = routing::url();
 
+        // we got back our auth code, init our client
         if url.contains("code") {
-            println!("{}", &url);
             app::response_url().set(url);
             app::authorize_client();
-            return router().replace("/")
+            return router().replace("/");
         }
     })
 }
@@ -22,9 +22,6 @@ pub fn router() -> &'static Router<Route> {
 #[route]
 #[derive(Clone)]
 pub enum Route {
-    #[route("?code", response_code)]
-    Code { response_code: String },
-
     #[route()]
     Root,
 }

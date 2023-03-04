@@ -52,9 +52,14 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
     Search::new()
         .focus(true)
         .focus_signal(focus)
-        .on_focus(super::start_search_timer)
-        .on_change(|new_query| {
-            super::set_new_query(new_query);
+        .on_focus(|| {
+            if token().lock_ref().is_expired() {
+                refresh_token();
+            }
+            super::start_search_timer()
+        })
+        .on_change(|q| {
+            super::query().set(q);
             super::start_search_timer();
         })
         .placeholder("Start typing a song title/artist")
@@ -65,7 +70,7 @@ fn search_track(focus: impl Signal<Item = bool> + Unpin + 'static) -> impl Eleme
             event.if_key(Key::Other("ArrowUp".to_owned()), super::prev_track);
             event.if_key(Key::Other(" ".to_owned()), super::search);
         })
-        .value_signal(super::new_query().signal_cloned())
+        .value_signal(super::query().signal_cloned())
         .size("lg")
 }
 
