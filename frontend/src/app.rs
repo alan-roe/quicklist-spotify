@@ -16,26 +16,21 @@ use std::sync::Arc;
 use zoon::{eprintln, println, web_storage::Result, *};
 pub mod view;
 
-static STORAGE_KEY: &str = "quicklist-spotify";
-
 // ------ Local Storage ------
 
 fn store_local<T: Serialize + ?Sized>(key: &str, val: &T) {
-    let key = STORAGE_KEY.to_owned() + "-" + key;
-    println!("Storing local: {key}");
-    if let Err(e) = local_storage().insert(&key, val) {
+    if let Err(e) = local_storage().insert(key, val) {
         eprintln!("Saving {key} to local storage failed: {e}");
     } else {
         println!("Saved {key} to local storage");
     }
 }
 
-fn retrieve_local<T: DeserializeOwned>(key: &str) -> Result<Mutable<T>> {
-    let key = STORAGE_KEY.to_owned() + "-" + key;
-    match local_storage().get(&key) {
+fn retrieve_local<T: DeserializeOwned>(key: &str) -> Result<T> {
+    match local_storage().get(key) {
         Some(Ok(val)) => {
             println!("{key} loaded");
-            Ok(Mutable::new(val))
+            Ok(val)
         }
         Some(Err(e)) => Err(e),
         None => Err(web_storage::Error::StorageNotFoundError),
@@ -63,7 +58,7 @@ fn query() -> &'static Mutable<String> {
 
 #[static_ref]
 fn playlist_name() -> &'static Mutable<String> {
-    retrieve_local("playlist-name").unwrap_or_default()
+    Mutable::new(retrieve_local("playlist-name").unwrap_or_default())
 }
 
 fn store_playlist_name() {
@@ -72,7 +67,7 @@ fn store_playlist_name() {
 
 fn reload_playlist_name() {
     if let Ok(name) = retrieve_local("playlist-name") {
-        playlist_name().set(name.get_cloned());
+        playlist_name().set(name);
     }
 }
 
@@ -108,14 +103,14 @@ fn playlist_duration_format() -> String {
 
 #[static_ref]
 pub fn token() -> &'static Mutable<Token> {
-    let token: Mutable<Token> = retrieve_local("token").unwrap_or_default();
+    let token: Token = retrieve_local("token").unwrap_or_default();
 
-    if token.get_cloned().is_expired() {
+    if token.is_expired() {
         println!("Token expired, refreshing");
         refresh_token()
     }
 
-    token
+    Mutable::new(token)
 }
 
 fn refresh_token() {
@@ -124,13 +119,12 @@ fn refresh_token() {
 
 #[static_ref]
 fn auth_token() -> &'static Mutable<Token> {
-    retrieve_local("auth-token").unwrap_or_default()
+    Mutable::new(retrieve_local("auth-token").unwrap_or_default())
 }
 
 #[static_ref]
 fn client() -> &'static Mutable<ClientCredsSpotify> {
     Mutable::new(ClientCredsSpotify::from_token(token().get_cloned()))
-    
 }
 
 #[static_ref]
@@ -140,7 +134,7 @@ fn auth_client() -> &'static Mutable<AuthCodeSpotify> {
 
 #[static_ref]
 fn auth_state() -> &'static Mutable<String> {
-    retrieve_local("state").unwrap_or_default()
+    Mutable::new(retrieve_local("state").unwrap_or_default())
 }
 
 #[static_ref]
@@ -291,16 +285,13 @@ fn add_track(track: Option<&Track>) {
 }
 
 pub fn load_tracks() {
-    if let Some(Ok(tracks)) = local_storage().get(STORAGE_KEY) {
+    if let Ok(tracks) = retrieve_local("tracks") {
         replace_tracks(tracks);
-        println!("Tracks loaded");
     }
 }
 
 fn save_tracks() {
-    if let Err(error) = local_storage().insert(STORAGE_KEY, tracks()) {
-        eprintln!("Saving tracks failed: {:?}", error);
-    }
+    store_local("tracks", tracks())
 }
 
 fn replace_tracks(new_tracks: Vec<Arc<Track>>) {
