@@ -49,6 +49,7 @@ impl Grid<RawHtmlEl<web_sys::HtmlElement>> {
 }
 
 impl<RE: RawEl> Styleable<'_> for Grid<RE> {}
+impl<RE: RawEl> ResizableViewport for Grid<RE> {}
 
 impl<RE: RawEl> UpdateRawEl for Grid<RE> {
     type RawEl = RE;

@@ -3,8 +3,8 @@ use crate::elements::{Button, Column, Grid, Input, Row, Search, Tile};
 
 pub fn root() -> impl Element {
     Grid::new()
-        .style("max-width", "30rem")
-        .style("width", "30rem")
+        .s(Width::fill())
+        .style("max-width", "640px")
         .child(Row::new().child(header()))
         .child(Row::new().child(panels()))
         .child(footer())
