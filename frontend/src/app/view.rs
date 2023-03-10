@@ -205,7 +205,7 @@ fn remove_track_button(todo: &Track) -> impl Element {
 fn panel_footer() -> impl Element {
     Row::with_tag(Tag::Footer)
         .s(Font::new().color(hsluv!(0, 0, 50)))
-        .s(Padding::new().x(15))
+        .s(Padding::new().x(15).y(5))
         .child(track_count())
 }
 
