@@ -126,23 +126,25 @@ fn playlist_name() -> impl Element {
 
 fn playlist_create_button() -> impl Element {
     Button::new()
+    .value_signal(
+        super::playlist_created()
+            .signal()
+            .map_bool(|| "Created", || "Create"),
+    )
         .on_press(|| {
             if !super::playlist_created().get() {
                 super::create_playlist();
             }
         })
-        .label_signal(
-            super::playlist_created()
-                .signal()
-                .map_bool(|| "Created", || "Create"),
-        )
+        
 }
 
 fn login_button() -> impl Element {
     Button::new()
-        .size("md")
+        //.size("md")
+        .value("Log in")
         .on_press(super::login)
-        .label("Log in")
+        
 }
 
 fn playlist_name_input() -> impl Element {

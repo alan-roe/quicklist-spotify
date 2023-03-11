@@ -1,7 +1,7 @@
 use std::{cell::RefCell, iter, marker::PhantomData, rc::Rc};
 use zoon::*;
 
-make_event!(BxBtn, "bx-btn" => web_sys::CustomEvent);
+make_event!(BxBtn, "click" => web_sys::CustomEvent);
 
 make_flags!(OnPress);
 pub struct Button<OnPressFlag, RE: RawEl> {
@@ -13,21 +13,26 @@ pub struct Button<OnPressFlag, RE: RawEl> {
 impl Button<OnPressFlagNotSet, RawHtmlEl<web_sys::HtmlElement>> {
     pub fn new() -> Self {
         Self {
-            raw_el: RawHtmlEl::new("bx-btn"),
+            raw_el: RawHtmlEl::new("md-filled-button"),
             flags: PhantomData,
         }
+    }
+
+    pub fn value(mut self, value: &str) -> Self {
+        self.raw_el = self.raw_el.attr("label", value);
+        self
     }
 
     pub fn value_signal(
         mut self,
         value: impl Signal<Item = impl IntoCowStr<'static>> + Unpin + 'static,
     ) -> Self {
-        self.raw_el = self.raw_el.prop_signal("value", value);
+        self.raw_el = self.raw_el.prop_signal("label", value);
         self
     }
 
     pub fn size(mut self, size: &str) -> Self {
-        self.raw_el = self.raw_el.prop("size", size);
+        //self.raw_el = self.raw_el.prop("size", size);
         self
     }
 }

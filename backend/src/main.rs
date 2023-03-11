@@ -20,11 +20,15 @@ async fn frontend() -> Frontend {
                 href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/plex.css" />
             <style type="text/css">
                 body {
-                    font-family: 'IBM Plex Sans', 'Helvetica Neue', Arial, sans-serif;
+                    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
                     margin: 0;
                 }
             </style>
+            <link rel="preconnect" href="https://rsms.me/">
+            <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
             <link rel="stylesheet" href="https://1.www.s81c.com/common/carbon-for-ibm-dotcom/version/v1.21.0/grid.css" />
+            <script type="module" src="_api/public/index.js">
+            </script>
             <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/search.min.js"></script>
             <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/input.min.js"></script>            
             <script async type="module" src="https://1.www.s81c.com/common/carbon/web-components/version/v1.21.0/tile.min.js"></script>

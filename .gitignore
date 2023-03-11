@@ -6,3 +6,6 @@ MoonZoonCustom.toml
 frontend_dist/_api
 frontend_dist/index.html
 .env
+node_modules
+package.json
+package-lock.json
